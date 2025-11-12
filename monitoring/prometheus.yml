@@ -1,0 +1,75 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'access-control-system'
+
+scrape_configs:
+  # API Gateway
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['api-gateway:8080']
+        labels:
+          service: 'api-gateway'
+
+  # Login Service
+  - job_name: 'login-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['login-service:8081']
+        labels:
+          service: 'login-service'
+
+  # Employee Service
+  - job_name: 'employee-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['employee-service:8082']
+        labels:
+          service: 'employee-service'
+
+  # Access Control Service
+  - job_name: 'access-control-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['access-control-service:8083']
+        labels:
+          service: 'access-control-service'
+
+  # Alert Service
+  - job_name: 'alert-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['alert-service:8084']
+        labels:
+          service: 'alert-service'
+
+  # SAGA Orchestrator
+  - job_name: 'saga-orchestrator'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['saga-orchestrator:8085']
+        labels:
+          service: 'saga-orchestrator'
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+        labels:
+          service: 'postgres'
+
+  # MongoDB Exporter
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb:27017']
+        labels:
+          service: 'mongodb'
+
+  # Kafka
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+        labels:
+          service: 'kafka'
