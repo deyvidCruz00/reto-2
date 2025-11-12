@@ -151,16 +151,18 @@ services:
     networks:
       - microservices-network
 
-  # Employee Service
+  # Employee Service (Flask/Python)
   employee-service:
     build: ./employee-service
     container_name: employee-service
     ports:
       - "8082:8082"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATA_MONGODB_URI: mongodb://admin:admin123@mongodb:27017/employeedb?authSource=admin
+      FLASK_ENV: production
+      MONGO_URI: mongodb://admin:admin123@mongodb:27017/employeedb?authSource=admin
+      MONGO_DB: employeedb
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVICE_PORT: 8082
     depends_on:
       mongodb:
         condition: service_healthy
@@ -169,18 +171,21 @@ services:
     networks:
       - microservices-network
 
-  # Access Control Service
+  # Access Control Service (Flask/Python)
   access-control-service:
     build: ./access-control-service
     container_name: access-control-service
     ports:
       - "8083:8083"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/accesscontroldb
-      SPRING_DATASOURCE_USERNAME: admin
-      SPRING_DATASOURCE_PASSWORD: admin123
+      FLASK_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: accesscontroldb
+      DB_USER: admin
+      DB_PASSWORD: admin123
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVICE_PORT: 8083
     depends_on:
       postgres:
         condition: service_healthy
@@ -189,7 +194,7 @@ services:
     networks:
       - microservices-network
 
-  # Alert Service
+  # Alert Service (Spring Boot/Java)
   alert-service:
     build: ./alert-service
     container_name: alert-service

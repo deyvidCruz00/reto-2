@@ -21,29 +21,32 @@ scrape_configs:
         labels:
           service: 'login-service'
 
-  # Employee Service
+  # Employee Service (Flask - Python)
   - job_name: 'employee-service'
-    metrics_path: '/actuator/prometheus'
+    metrics_path: '/metrics'
     static_configs:
       - targets: ['employee-service:8082']
         labels:
           service: 'employee-service'
+          type: 'flask'
 
-  # Access Control Service
+  # Access Control Service (Flask - Python)
   - job_name: 'access-control-service'
-    metrics_path: '/actuator/prometheus'
+    metrics_path: '/metrics'
     static_configs:
       - targets: ['access-control-service:8083']
         labels:
           service: 'access-control-service'
+          type: 'flask'
 
-  # Alert Service
+  # Alert Service (Spring Boot - Java)
   - job_name: 'alert-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['alert-service:8084']
         labels:
           service: 'alert-service'
+          type: 'spring-boot'
 
   # SAGA Orchestrator
   - job_name: 'saga-orchestrator'
