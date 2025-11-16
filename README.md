@@ -148,35 +148,79 @@ docker-compose ps
 ### Alert Service (`/alert`)
 - `POST /alert/usrnotregistattempt` - Alerta usuario no registrado
 - `POST /alert/usrexceedattempts` - Alerta intentos excedidos
+
+### SAGA Orchestrator (`/api/saga`)
+- `POST /api/saga/check-in` - Iniciar saga de check-in
+- `POST /api/saga/check-out` - Iniciar saga de check-out
+- `GET /api/saga/{sagaId}` - Consultar estado de saga
+- `GET /api/saga/employee/{employeeId}` - Listar sagas por empleado
+- `GET /api/saga/all` - Listar todas las sagas
+- `POST /api/saga/{sagaId}/compensate` - Compensar saga fallida
 - `POST /alert/employeealreadyentered` - Alerta entrada duplicada
 - `POST /alert/employeealreadyleft` - Alerta salida duplicada
 
-## 🏛️ Patrón SAGA
+## 🏛️ Patrón SAGA con Orquestación
 
-El sistema implementa el patrón **SAGA Orchestration** para manejar transacciones distribuidas:
+El sistema implementa el patrón **SAGA Orchestration** con un orquestador centralizado para manejar transacciones distribuidas y garantizar consistencia eventual.
 
-### Ejemplo: Registro de Acceso (Check-In)
+### Características
 
-1. **Inicio**: Usuario solicita registrar entrada
-2. **Validación Empleado**: SAGA verifica que el empleado exista
-3. **Verificación Estado**: SAGA verifica que no tenga entrada activa
-4. **Registro**: Se registra la entrada en Access Control Service
-5. **Evento Éxito**: Se publica evento de éxito
-6. **Compensación** (si falla): Se revierten los cambios
+- **Orquestador centralizado** en puerto 8085
+- **Persistencia de estado** en PostgreSQL dedicado
+- **Comunicación asíncrona** vía Kafka
+- **Compensación automática** en caso de fallos
+- **Timeout handling** (30 segundos configurable)
+- **Logging detallado** de cada paso
+
+### Check-In SAGA
+
+**Pasos:**
+1. **VALIDATE_EMPLOYEE**: Valida empleado existe y está activo
+2. **CHECK_ACTIVE_ENTRY**: Verifica no tiene entrada activa  
+3. **REGISTER_ACCESS**: Registra entrada en Access Control
+
+**Compensaciones:**
+- Fallo en paso 3 → Publica alerta `EMPLOYEE_ALREADY_ENTERED`
+- Fallo en validación → Termina saga con error
+
+### Check-Out SAGA
+
+**Pasos:**
+1. **VALIDATE_EMPLOYEE**: Valida empleado existe y está activo
+2. **REGISTER_ACCESS**: Actualiza registro con hora de salida
+
+**Compensaciones:**
+- Fallo en cualquier paso → Termina saga con error
+
+### Estados de SAGA
+
+```
+STARTED → PENDING_EMPLOYEE_VALIDATION → EMPLOYEE_VALIDATED → 
+PENDING_ACCESS_REGISTRATION → ACCESS_REGISTERED → COMPLETED
+
+              ↓ (error)
+            FAILED
+              ↓ (compensación)
+        COMPENSATING → COMPENSATED
+```
 
 ### Flujo de Eventos Kafka
 
 ```
-Topics:
-- employee-validation-request
-- employee-validation-response
-- access-checkin-request
-- access-checkin-response
-- access-checkout-request
-- access-checkout-response
-- alert-notification
-- saga-compensation
+Topics Producidos por Orchestrator:
+- employee-validation-request    (solicitud validación empleado)
+- access-checkin-request         (solicitud registro entrada)
+- access-checkout-request        (solicitud registro salida)
+- saga-completed                 (saga exitosa)
+- saga-failed                    (saga fallida)
+- alerts                         (alertas de negocio)
+
+Topics Consumidos por Orchestrator:
+- employee-validation-response   (respuesta validación empleado)
+- access-checkin-response        (respuesta registro entrada)
+- access-checkout-response       (respuesta registro salida)
 ```
+
 
 ## 📊 Monitoreo
 

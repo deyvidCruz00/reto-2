@@ -1,0 +1,249 @@
+{
+	"info": {
+		"_postman_id": "saga-orchestrator-collection",
+		"name": "Saga Orchestrator API",
+		"description": "Collection para probar el Saga Orchestrator del sistema de control de acceso",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/api/saga/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"saga",
+						"health"
+					]
+				},
+				"description": "Verifica que el servicio esté corriendo"
+			},
+			"response": []
+		},
+		{
+			"name": "Actuator Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/actuator/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"actuator",
+						"health"
+					]
+				},
+				"description": "Health check de Spring Actuator"
+			},
+			"response": []
+		},
+		{
+			"name": "Start Check-In Saga",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"employeeId\": \"123456\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/saga/check-in",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"saga",
+						"check-in"
+					]
+				},
+				"description": "Inicia una saga de check-in para un empleado"
+			},
+			"response": []
+		},
+		{
+			"name": "Start Check-Out Saga",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"employeeId\": \"123456\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8085/api/saga/check-out",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"saga",
+						"check-out"
+					]
+				},
+				"description": "Inicia una saga de check-out para un empleado"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Saga by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/api/saga/:sagaId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"saga",
+						":sagaId"
+					],
+					"variable": [
+						{
+							"key": "sagaId",
+							"value": "REPLACE_WITH_SAGA_ID",
+							"description": "ID de la saga a consultar"
+						}
+					]
+				},
+				"description": "Consulta el estado de una saga específica por su ID"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Sagas by Employee",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/api/saga/employee/:employeeId",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"saga",
+						"employee",
+						":employeeId"
+					],
+					"variable": [
+						{
+							"key": "employeeId",
+							"value": "123456",
+							"description": "ID del empleado"
+						}
+					]
+				},
+				"description": "Lista todas las sagas de un empleado específico"
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Sagas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/api/saga/all",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"saga",
+						"all"
+					]
+				},
+				"description": "Lista todas las sagas del sistema"
+			},
+			"response": []
+		},
+		{
+			"name": "Compensate Saga",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/api/saga/:sagaId/compensate",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"api",
+						"saga",
+						":sagaId",
+						"compensate"
+					],
+					"variable": [
+						{
+							"key": "sagaId",
+							"value": "REPLACE_WITH_SAGA_ID",
+							"description": "ID de la saga a compensar"
+						}
+					]
+				},
+				"description": "Ejecuta compensación de una saga fallida"
+			},
+			"response": []
+		},
+		{
+			"name": "Prometheus Metrics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8085/actuator/prometheus",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8085",
+					"path": [
+						"actuator",
+						"prometheus"
+					]
+				},
+				"description": "Obtiene las métricas de Prometheus"
+			},
+			"response": []
+		}
+	]
+}

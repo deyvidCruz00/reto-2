@@ -19,9 +19,9 @@ class Config:
     
     # Kafka
     KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092').split(',')
-    KAFKA_TOPIC_CHECKIN_REQUEST = os.getenv('KAFKA_TOPIC_CHECKIN_REQUEST', 'access-checkin-request')
-    KAFKA_TOPIC_CHECKOUT_REQUEST = os.getenv('KAFKA_TOPIC_CHECKOUT_REQUEST', 'access-checkout-request')
-    KAFKA_TOPIC_ALERT_NOTIFICATION = os.getenv('KAFKA_TOPIC_ALERT_NOTIFICATION', 'alert-notification')
+    KAFKA_TOPIC_ACCESS_REGISTRATION_REQUEST = os.getenv('KAFKA_TOPIC_ACCESS_REGISTRATION_REQUEST', 'access-registration-request')
+    KAFKA_TOPIC_ACCESS_REGISTRATION_RESPONSE = os.getenv('KAFKA_TOPIC_ACCESS_REGISTRATION_RESPONSE', 'access-registration-response')
+    KAFKA_TOPIC_ALERTS = os.getenv('KAFKA_TOPIC_ALERTS', 'alerts')
     
     # Service
     SERVICE_PORT = int(os.getenv('SERVICE_PORT', 8083))

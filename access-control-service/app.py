@@ -3,6 +3,8 @@ from flask_cors import CORS
 from controllers.access_controller import access_bp
 from database.postgres import database
 from config import Config
+from services.access_service import AccessService
+from services.saga_service import SagaService
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 import logging
 import time
@@ -104,6 +106,14 @@ if __name__ == '__main__':
         # Connect to database
         logger.info("Connecting to PostgreSQL...")
         database.connect()
+        
+        # Initialize services
+        access_service = AccessService()
+        saga_service = SagaService()
+        
+        # Start Kafka consumer for saga orchestrator requests
+        logger.info("Starting Kafka consumer for saga orchestrator requests...")
+        saga_service.start_consumer(access_service)
         
         # Start Flask app
         logger.info(f"Starting Access Control Service on port {Config.SERVICE_PORT}")

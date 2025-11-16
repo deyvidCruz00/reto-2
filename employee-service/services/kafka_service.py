@@ -76,19 +76,21 @@ class KafkaService:
     def publish_employee_validation_response(self, validation_result: dict):
         """Publish employee validation response (for SAGA)"""
         try:
-            event = {
-                "event_type": "EMPLOYEE_VALIDATION_RESPONSE",
-                "timestamp": datetime.utcnow().isoformat(),
-                "data": validation_result
+            # Format response to match saga orchestrator DTO
+            response = {
+                "sagaId": validation_result.get('sagaId'),
+                "isValid": validation_result.get('exists', False) and validation_result.get('active', False),
+                "employeeName": validation_result.get('name', ''),
+                "errorMessage": validation_result.get('errorMessage', '')
             }
             
             future = self.producer.send(
                 Config.KAFKA_TOPIC_EMPLOYEE_VALIDATION_RESPONSE,
-                value=event
+                value=response
             )
             
             record_metadata = future.get(timeout=10)
-            logger.info(f"Employee validation response published: {validation_result}")
+            logger.info(f"Employee validation response published: {response}")
             
         except KafkaError as e:
             logger.error(f"Error publishing validation response: {e}")
@@ -111,22 +113,42 @@ class KafkaService:
                 
                 for message in consumer:
                     try:
-                        event = message.value
-                        logger.info(f"Received validation request: {event}")
+                        request = message.value
+                        logger.info(f"Received validation request: {request}")
                         
-                        document = event.get('data', {}).get('employeeId') or event.get('data', {}).get('document')
-                        saga_id = event.get('sagaId')
+                        # Extract data from saga orchestrator format
+                        saga_id = request.get('sagaId')
+                        employee_id = request.get('employeeId')
                         
-                        if document:
+                        if employee_id and saga_id:
                             # Validate employee
-                            validation_result = employee_service.validate_employee(document)
-                            validation_result['sagaId'] = saga_id
+                            employee = employee_service.repository.find_by_document(employee_id)
+                            
+                            validation_result = {
+                                'sagaId': saga_id,
+                                'exists': employee is not None,
+                                'active': employee.active if employee else False,
+                                'name': f"{employee.name} {employee.lastname}" if employee else '',
+                                'errorMessage': '' if employee and employee.active else 'Employee not found or inactive'
+                            }
                             
                             # Publish response
                             self.publish_employee_validation_response(validation_result)
+                        else:
+                            logger.error(f"Invalid request format: {request}")
                         
                     except Exception as e:
                         logger.error(f"Error processing validation request: {e}")
+                        # Send error response
+                        if saga_id:
+                            error_result = {
+                                'sagaId': saga_id,
+                                'exists': False,
+                                'active': False,
+                                'name': '',
+                                'errorMessage': f"Error processing request: {str(e)}"
+                            }
+                            self.publish_employee_validation_response(error_result)
                         
             except Exception as e:
                 logger.error(f"Error in Kafka consumer: {e}")
