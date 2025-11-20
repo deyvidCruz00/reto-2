@@ -1,11 +1,17 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-from controllers.employee_controller import employee_bp, employee_service
-from database.mongodb import mongodb
 from config import Config
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 import logging
 import time
+
+# Hexagonal Architecture imports
+from infrastructure.database.mongodb import mongodb
+from infrastructure.adapters.mongodb_employee_repository import MongoDBEmployeeRepository
+from infrastructure.kafka.kafka_event_publisher import KafkaEventPublisher
+from infrastructure.kafka.kafka_employee_validation_consumer import KafkaEmployeeValidationConsumer
+from application.use_cases.employee_use_case import EmployeeUseCase
+from infrastructure.rest.employee_controller import create_employee_blueprint
 
 # Configure logging
 logging.basicConfig(
@@ -31,8 +37,16 @@ REQUEST_DURATION = Histogram(
     ['method', 'endpoint']
 )
 
-# Middleware for metrics
-@app.before_request
+# Dependency Injection - Hexagonal Architecture
+repository = MongoDBEmployeeRepository()
+event_publisher = KafkaEventPublisher()
+employee_use_case = EmployeeUseCase(repository, event_publisher)
+
+# Create blueprint with dependency injection
+employee_bp = create_employee_blueprint(employee_use_case)
+
+# Register blueprints
+app.register_blueprint(employee_bp)
 def before_request():
     request._start_time = time.time()
 
@@ -56,8 +70,8 @@ def after_request(response):
 # Register blueprints
 app.register_blueprint(employee_bp)
 
-# Root endpoint
-@app.route('/')
+# Middleware for metrics
+@app.before_request
 def index():
     return jsonify({
         "service": "Employee Service",
@@ -72,15 +86,15 @@ def index():
         }
     })
 
-# Health endpoint
 @app.route('/health')
 def health():
     try:
         # Test MongoDB connection
-        mongodb.get_database().command('ping')
+        mongodb.ping()
         return jsonify({
             "status": "UP",
             "service": "employee-service",
+            "architecture": "Hexagonal",
             "database": "connected"
         }), 200
     except Exception as e:
@@ -132,11 +146,10 @@ if __name__ == '__main__':
         logger.info("Connecting to MongoDB...")
         mongodb.connect()
         
-        # Start Kafka consumer in background
-        logger.info("Starting Kafka consumer...")
-        from services.kafka_service import KafkaService
-        kafka_service = KafkaService()
-        kafka_service.start_consumer(employee_service)
+        # Start Kafka consumer for SAGA
+        logger.info("Starting Kafka consumer for SAGA validation requests...")
+        kafka_consumer = KafkaEmployeeValidationConsumer(employee_use_case, event_publisher)
+        kafka_consumer.start_consumer()
         
         # Start Flask app
         logger.info(f"Starting Employee Service on port {Config.SERVICE_PORT}")
@@ -151,3 +164,4 @@ if __name__ == '__main__':
         raise
     finally:
         mongodb.close()
+        event_publisher.close()

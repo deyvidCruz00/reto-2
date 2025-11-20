@@ -1,13 +1,17 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from controllers.access_controller import access_bp
-from database.postgres import database
 from config import Config
-from services.access_service import AccessService
-from services.saga_service import SagaService
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 import logging
 import time
+
+# Hexagonal Architecture Imports
+from infrastructure.database.postgres import database
+from infrastructure.adapters.postgres_access_repository import PostgresAccessRepository
+from infrastructure.kafka.kafka_event_publisher import KafkaEventPublisher
+from infrastructure.kafka.kafka_access_consumer import KafkaAccessConsumer
+from infrastructure.rest.access_controller import create_access_blueprint
+from application.use_cases.access_use_case import AccessUseCase
 
 # Configure logging
 logging.basicConfig(
@@ -19,6 +23,25 @@ logger = logging.getLogger(__name__)
 # Create Flask app
 app = Flask(__name__)
 CORS(app)
+
+# ==============================================
+# DEPENDENCY INJECTION (Hexagonal Architecture)
+# ==============================================
+
+# Infrastructure Layer - Adapters
+repository = PostgresAccessRepository()
+event_publisher = KafkaEventPublisher()
+
+# Application Layer - Use Cases
+access_use_case = AccessUseCase(repository, event_publisher)
+
+# Infrastructure Layer - REST Controller (with DI)
+access_bp = create_access_blueprint(access_use_case)
+
+# Infrastructure Layer - Kafka Consumer (with DI)
+kafka_consumer = KafkaAccessConsumer(access_use_case)
+
+# ==============================================
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
@@ -79,15 +102,13 @@ def index():
 def health():
     try:
         # Test database connection
-        session = database.get_session()
-        session.execute("SELECT 1")
-        session.close()
+        db_status = database.ping()
         
         return jsonify({
-            "status": "UP",
+            "status": "UP" if db_status else "DEGRADED",
             "service": "access-control-service",
-            "database": "connected"
-        }), 200
+            "database": "connected" if db_status else "disconnected"
+        }), 200 if db_status else 503
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return jsonify({
@@ -107,13 +128,9 @@ if __name__ == '__main__':
         logger.info("Connecting to PostgreSQL...")
         database.connect()
         
-        # Initialize services
-        access_service = AccessService()
-        saga_service = SagaService()
-        
         # Start Kafka consumer for saga orchestrator requests
         logger.info("Starting Kafka consumer for saga orchestrator requests...")
-        saga_service.start_consumer(access_service)
+        kafka_consumer.start_consumer()
         
         # Start Flask app
         logger.info(f"Starting Access Control Service on port {Config.SERVICE_PORT}")
@@ -127,4 +144,7 @@ if __name__ == '__main__':
         logger.error(f"Failed to start Access Control Service: {e}")
         raise
     finally:
+        # Clean up resources
+        kafka_consumer.close()
+        event_publisher.close()
         database.close()
