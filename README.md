@@ -9,9 +9,13 @@ Sistema de información para el control de acceso peatonal a las instalaciones d
 ### Microservicios
 
 1. **API Gateway** (Puerto 8080)
-   - Punto de entrada único al sistema
-   - Enrutamiento de peticiones
-   - Autenticación y autorización centralizada
+   - Punto de entrada único al sistema con Spring Cloud Gateway
+   - Enrutamiento inteligente de peticiones a 5 microservicios
+   - Autenticación y autorización centralizada con JWT
+   - Circuit Breaker con Resilience4j para alta disponibilidad
+   - CORS configurado para integración con frontend
+   - Logging detallado de requests/responses
+   - Endpoints de fallback cuando servicios no están disponibles
 
 2. **Login Service** (Puerto 8081)
    - Gestión de usuarios del sistema
@@ -40,6 +44,9 @@ Sistema de información para el control de acceso peatonal a las instalaciones d
 ### Tecnologías Utilizadas
 
 - **Backend**: Spring Boot 3.2.0 con Java 17
+- **API Gateway**: Spring Cloud Gateway 2023.0.0
+- **Circuit Breaker**: Resilience4j
+- **Seguridad JWT**: JJWT 0.12.3
 - **Bases de Datos**: 
   - PostgreSQL 15 (Relacional)
   - MongoDB 7.0 (NoSQL)
@@ -54,13 +61,14 @@ Sistema de información para el control de acceso peatonal a las instalaciones d
 
 ```
 reto-2/
-├── api-gateway/                 # Gateway de entrada
+├── api-gateway/                 # Gateway de entrada ✨ NUEVO
 ├── login-service/               # Microservicio de autenticación
 ├── employee-service/            # Microservicio de empleados
 ├── access-control-service/      # Microservicio de control de acceso
 ├── alert-service/               # Microservicio de alertas
 ├── saga-orchestrator/           # Orquestador SAGA
 ├── frontend/                    # Aplicación web (React/Angular/Vue)
+├── testing/                     # Scripts de testing E2E ✨ NUEVO
 ├── monitoring/                  # Configuración Prometheus/Grafana
 ├── docker/                      # Scripts de inicialización BD
 └── docker-compose.yml           # Configuración de contenedores
@@ -277,10 +285,6 @@ mvn verify
 - ✅ **Observabilidad**: Prometheus + Grafana
 - ✅ **Seguridad**: JWT + Autenticación multifactor
 - ✅ **Mantenibilidad**: Arquitectura hexagonal + DDD
-
-## 📚 Documentación Adicional
-
-Ver carpetas individuales de cada microservicio para documentación específica.
 
 ## 🤝 Contribuidores
 

@@ -1,0 +1,172 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  
+  cloud:
+    gateway:
+      routes:
+        # Login Service Routes (Public)
+        - id: login-service
+          uri: http://login-service:8081
+          predicates:
+            - Path=/login/**
+          filters:
+            - RewritePath=/login/(?<segment>.*), /$1
+        
+        # Employee Service Routes (Protected)
+        - id: employee-service
+          uri: http://employee-service:8082
+          predicates:
+            - Path=/employee/**
+          filters:
+            - RewritePath=/employee/(?<segment>.*), /$1
+            - name: CircuitBreaker
+              args:
+                name: employeeService
+                fallbackUri: forward:/fallback/employee
+        
+        # Access Control Service Routes (Protected)
+        - id: access-control-service
+          uri: http://access-control-service:8083
+          predicates:
+            - Path=/access/**
+          filters:
+            - RewritePath=/access/(?<segment>.*), /$1
+            - name: CircuitBreaker
+              args:
+                name: accessService
+                fallbackUri: forward:/fallback/access
+        
+        # Alert Service Routes (Protected)
+        - id: alert-service
+          uri: http://alert-service:8084
+          predicates:
+            - Path=/alert/**
+          filters:
+            - RewritePath=/alert/(?<segment>.*), /$1
+            - name: CircuitBreaker
+              args:
+                name: alertService
+                fallbackUri: forward:/fallback/alert
+        
+        # SAGA Orchestrator Routes (Protected)
+        - id: saga-orchestrator
+          uri: http://sagaOrchestrator:8085
+          predicates:
+            - Path=/saga/**
+          filters:
+            - RewritePath=/saga/(?<segment>.*), /api/saga/$1
+            - name: CircuitBreaker
+              args:
+                name: sagaService
+                fallbackUri: forward:/fallback/saga
+      
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+  
+  # Redis Configuration for Rate Limiting
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation12345678901234567890}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# Resilience4j Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      employeeService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      
+      accessService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      
+      alertService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+      
+      sagaService:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  
+  timelimiter:
+    instances:
+      employeeService:
+        timeoutDuration: 5s
+      accessService:
+        timeoutDuration: 5s
+      alertService:
+        timeoutDuration: 5s
+      sagaService:
+        timeoutDuration: 10s
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.uptc.apigateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
