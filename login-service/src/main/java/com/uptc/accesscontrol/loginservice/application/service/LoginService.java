@@ -96,18 +96,14 @@ public class LoginService implements LoginUseCasePort {
             // Verificar si el usuario está bloqueado usando lógica de dominio
             if (login.isAccountLocked(lockDurationMinutes)) {
                 long minutesRemaining = login.getRemainingLockTimeMinutes(lockDurationMinutes);
-                    log.warn("User {} is locked. Unlock in {} minutes", request.getUserId(), minutesRemaining);
-                    
-                    return AuthResponse.builder()
-                            .userId(request.getUserId())
-                            .message("Account locked. Try again in " + minutesRemaining + " minutes")
-                            .success(false)
-                            .locked(true)
-                            .build();
-                } else {
-                    // Desbloquear usuario si ya pasó el tiempo
-                    loginRepository.unlockUser(request.getUserId());
-                }
+                log.warn("User {} is locked. Unlock in {} minutes", request.getUserId(), minutesRemaining);
+                
+                return AuthResponse.builder()
+                        .userId(request.getUserId())
+                        .message("Account locked. Try again in " + minutesRemaining + " minutes")
+                        .success(false)
+                        .locked(true)
+                        .build();
             }
 
             // Verificar contraseña
