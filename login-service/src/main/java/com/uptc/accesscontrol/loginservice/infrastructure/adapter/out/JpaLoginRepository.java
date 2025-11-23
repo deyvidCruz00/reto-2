@@ -1,15 +1,15 @@
 package com.uptc.accesscontrol.loginservice.infrastructure.adapter.out;
 
-import com.uptc.accesscontrol.loginservice.domain.model.Login;
+import com.uptc.accesscontrol.loginservice.infrastructure.persistence.LoginJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface JpaLoginRepository extends JpaRepository<Login, Long> {
+public interface JpaLoginRepository extends JpaRepository<LoginJpaEntity, Long> {
     
-    Optional<Login> findByUserId(Long userId);
+    Optional<LoginJpaEntity> findByUserId(Long userId);
     
     boolean existsByUserId(Long userId);
 }

@@ -1,5 +1,6 @@
 package com.uptc.accesscontrol.loginservice.infrastructure.security;
 
+import com.uptc.accesscontrol.loginservice.domain.port.out.TokenProviderPort;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -13,8 +14,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * JWT Token Provider Adapter - Infrastructure implementation
+ * Implements the TokenProviderPort using jjwt library
+ */
 @Component
-public class JwtTokenProvider {
+public class JwtTokenProvider implements TokenProviderPort {
 
     @Value("${jwt.secret}")
     private String secret;
@@ -27,6 +32,7 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    @Override
     public String generateToken(Long userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
@@ -40,6 +46,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    @Override
     public Long getUserIdFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -50,6 +57,7 @@ public class JwtTokenProvider {
         return claims.get("userId", Long.class);
     }
 
+    @Override
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()

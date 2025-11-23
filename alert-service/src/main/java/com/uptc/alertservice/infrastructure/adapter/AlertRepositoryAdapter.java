@@ -1,7 +1,8 @@
 package com.uptc.alertservice.infrastructure.adapter;
 
-import com.uptc.alertservice.domain.entity.Alert;
+import com.uptc.alertservice.domain.entity.AlertDomain;
 import com.uptc.alertservice.domain.port.AlertRepositoryPort;
+import com.uptc.alertservice.infrastructure.persistence.AlertMapper;
 import com.uptc.alertservice.infrastructure.repository.JpaAlertRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -9,51 +10,68 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class AlertRepositoryAdapter implements AlertRepositoryPort {
     
     private final JpaAlertRepository jpaAlertRepository;
+    private final AlertMapper alertMapper;
     
     @Override
-    public Alert save(Alert alert) {
-        return jpaAlertRepository.save(alert);
+    public AlertDomain save(AlertDomain alert) {
+        var jpaEntity = alertMapper.toJpaEntity(alert);
+        var saved = jpaAlertRepository.save(jpaEntity);
+        return alertMapper.toDomain(saved);
     }
     
     @Override
-    public Optional<Alert> findById(Long id) {
-        return jpaAlertRepository.findById(id);
+    public Optional<AlertDomain> findById(Long id) {
+        return jpaAlertRepository.findById(id)
+                .map(alertMapper::toDomain);
     }
     
     @Override
-    public List<Alert> findAll() {
-        return jpaAlertRepository.findAll();
+    public List<AlertDomain> findAll() {
+        return jpaAlertRepository.findAll().stream()
+                .map(alertMapper::toDomain)
+                .collect(Collectors.toList());
     }
     
     @Override
-    public List<Alert> findByCode(String code) {
-        return jpaAlertRepository.findByCode(code);
+    public List<AlertDomain> findByCode(String code) {
+        return jpaAlertRepository.findByCode(code).stream()
+                .map(alertMapper::toDomain)
+                .collect(Collectors.toList());
     }
     
     @Override
-    public List<Alert> findBySeverity(String severity) {
-        return jpaAlertRepository.findBySeverity(severity);
+    public List<AlertDomain> findBySeverity(String severity) {
+        return jpaAlertRepository.findBySeverity(severity).stream()
+                .map(alertMapper::toDomain)
+                .collect(Collectors.toList());
     }
     
     @Override
-    public List<Alert> findByEmployeeId(String employeeId) {
-        return jpaAlertRepository.findByEmployeeId(employeeId);
+    public List<AlertDomain> findByEmployeeId(String employeeId) {
+        return jpaAlertRepository.findByEmployeeId(employeeId).stream()
+                .map(alertMapper::toDomain)
+                .collect(Collectors.toList());
     }
     
     @Override
-    public List<Alert> findByTimestampBetween(LocalDateTime start, LocalDateTime end) {
-        return jpaAlertRepository.findByTimestampBetween(start, end);
+    public List<AlertDomain> findByTimestampBetween(LocalDateTime start, LocalDateTime end) {
+        return jpaAlertRepository.findByTimestampBetween(start, end).stream()
+                .map(alertMapper::toDomain)
+                .collect(Collectors.toList());
     }
     
     @Override
-    public List<Alert> findByCodeAndTimestampAfter(String code, LocalDateTime timestamp) {
-        return jpaAlertRepository.findByCodeAndTimestampAfter(code, timestamp);
+    public List<AlertDomain> findByCodeAndTimestampAfter(String code, LocalDateTime timestamp) {
+        return jpaAlertRepository.findByCodeAndTimestampAfter(code, timestamp).stream()
+                .map(alertMapper::toDomain)
+                .collect(Collectors.toList());
     }
     
     @Override

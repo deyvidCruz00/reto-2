@@ -1,14 +1,14 @@
 package com.uptc.accesscontrol.loginservice.domain.port.out;
 
-import com.uptc.accesscontrol.loginservice.domain.model.Login;
+import com.uptc.accesscontrol.loginservice.domain.model.LoginDomain;
 
 import java.util.Optional;
 
 public interface LoginRepositoryPort {
     
-    Login save(Login login);
+    LoginDomain save(LoginDomain login);
     
-    Optional<Login> findByUserId(Long userId);
+    Optional<LoginDomain> findByUserId(Long userId);
     
     boolean existsByUserId(Long userId);
     

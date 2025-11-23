@@ -2,7 +2,7 @@ package com.uptc.alertservice.infrastructure.rest;
 
 import com.uptc.alertservice.application.dto.AlertRequest;
 import com.uptc.alertservice.application.dto.AlertResponse;
-import com.uptc.alertservice.domain.entity.Alert;
+import com.uptc.alertservice.domain.entity.AlertDomain;
 import com.uptc.alertservice.domain.port.AlertUseCasePort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +30,7 @@ public class AlertController {
     @Operation(summary = "Create a new alert manually")
     public ResponseEntity<AlertResponse> createAlert(@RequestBody AlertRequest request) {
         log.info("Creating alert manually: {}", request.getCode());
-        Alert alert = alertUseCase.createAlert(request);
+        AlertDomain alert = alertUseCase.createAlert(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(alert));
     }
     
@@ -38,7 +38,7 @@ public class AlertController {
     @Operation(summary = "Get alert by ID")
     public ResponseEntity<AlertResponse> getAlertById(@PathVariable Long id) {
         log.info("Fetching alert by ID: {}", id);
-        Alert alert = alertUseCase.getAlertById(id);
+        AlertDomain alert = alertUseCase.getAlertById(id);
         return ResponseEntity.ok(toResponse(alert));
     }
     
@@ -46,7 +46,7 @@ public class AlertController {
     @Operation(summary = "Get all alerts")
     public ResponseEntity<List<AlertResponse>> getAllAlerts() {
         log.info("Fetching all alerts");
-        List<Alert> alerts = alertUseCase.getAllAlerts();
+        List<AlertDomain> alerts = alertUseCase.getAllAlerts();
         List<AlertResponse> responses = alerts.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -57,7 +57,7 @@ public class AlertController {
     @Operation(summary = "Get alerts by code")
     public ResponseEntity<List<AlertResponse>> getAlertsByCode(@PathVariable String code) {
         log.info("Fetching alerts by code: {}", code);
-        List<Alert> alerts = alertUseCase.getAlertsByCode(code);
+        List<AlertDomain> alerts = alertUseCase.getAlertsByCode(code);
         List<AlertResponse> responses = alerts.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -68,7 +68,7 @@ public class AlertController {
     @Operation(summary = "Get alerts by severity")
     public ResponseEntity<List<AlertResponse>> getAlertsBySeverity(@PathVariable String severity) {
         log.info("Fetching alerts by severity: {}", severity);
-        List<Alert> alerts = alertUseCase.getAlertsBySeverity(severity);
+        List<AlertDomain> alerts = alertUseCase.getAlertsBySeverity(severity);
         List<AlertResponse> responses = alerts.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -79,7 +79,7 @@ public class AlertController {
     @Operation(summary = "Get alerts by employee ID")
     public ResponseEntity<List<AlertResponse>> getAlertsByEmployeeId(@PathVariable String employeeId) {
         log.info("Fetching alerts by employee ID: {}", employeeId);
-        List<Alert> alerts = alertUseCase.getAlertsByEmployeeId(employeeId);
+        List<AlertDomain> alerts = alertUseCase.getAlertsByEmployeeId(employeeId);
         List<AlertResponse> responses = alerts.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -92,7 +92,7 @@ public class AlertController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         log.info("Fetching alerts between {} and {}", start, end);
-        List<Alert> alerts = alertUseCase.getAlertsByDateRange(start, end);
+        List<AlertDomain> alerts = alertUseCase.getAlertsByDateRange(start, end);
         List<AlertResponse> responses = alerts.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -126,7 +126,7 @@ public class AlertController {
         return ResponseEntity.ok("Alert Service is UP");
     }
     
-    private AlertResponse toResponse(Alert alert) {
+    private AlertResponse toResponse(AlertDomain alert) {
         return AlertResponse.builder()
                 .id(alert.getId())
                 .code(alert.getCode())

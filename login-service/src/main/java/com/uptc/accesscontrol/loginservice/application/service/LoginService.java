@@ -1,11 +1,11 @@
 package com.uptc.accesscontrol.loginservice.application.service;
 
 import com.uptc.accesscontrol.loginservice.application.dto.*;
-import com.uptc.accesscontrol.loginservice.domain.model.Login;
+import com.uptc.accesscontrol.loginservice.domain.model.LoginDomain;
 import com.uptc.accesscontrol.loginservice.domain.port.in.LoginUseCasePort;
 import com.uptc.accesscontrol.loginservice.domain.port.out.LoginRepositoryPort;
-import com.uptc.accesscontrol.loginservice.infrastructure.event.AlertEventPublisher;
-import com.uptc.accesscontrol.loginservice.infrastructure.security.JwtTokenProvider;
+import com.uptc.accesscontrol.loginservice.domain.port.out.TokenProviderPort;
+import com.uptc.accesscontrol.loginservice.domain.port.out.AlertEventPublisherPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,8 +24,8 @@ public class LoginService implements LoginUseCasePort {
 
     private final LoginRepositoryPort loginRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final AlertEventPublisher alertEventPublisher;
+    private final TokenProviderPort tokenProvider;
+    private final AlertEventPublisherPort alertEventPublisher;
 
     @Value("${login.max-attempts}")
     private int maxAttempts;
@@ -47,14 +47,12 @@ public class LoginService implements LoginUseCasePort {
             }
 
             // Crear nuevo usuario
-            Login login = Login.builder()
-                    .userId(request.getUserId())
-                    .password(passwordEncoder.encode(request.getPassword()))
-                    .isLocked(false)
-                    .failedAttempts(0)
-                    .build();
+            LoginDomain login = new LoginDomain(
+                    request.getUserId(),
+                    passwordEncoder.encode(request.getPassword())
+            );
 
-            Login savedLogin = loginRepository.save(login);
+            LoginDomain savedLogin = loginRepository.save(login);
 
             log.info("User created successfully: {}", savedLogin.getUserId());
 
@@ -78,7 +76,7 @@ public class LoginService implements LoginUseCasePort {
     @Transactional
     public AuthResponse authenticateUser(AuthRequest request) {
         try {
-            Optional<Login> loginOpt = loginRepository.findByUserId(request.getUserId());
+            Optional<LoginDomain> loginOpt = loginRepository.findByUserId(request.getUserId());
 
             // Usuario no registrado
             if (loginOpt.isEmpty()) {
@@ -93,14 +91,11 @@ public class LoginService implements LoginUseCasePort {
                         .build();
             }
 
-            Login login = loginOpt.get();
+            LoginDomain login = loginOpt.get();
 
-            // Verificar si el usuario está bloqueado
-            if (login.getIsLocked() && login.getLockTime() != null) {
-                LocalDateTime unlockTime = login.getLockTime().plusMinutes(lockDurationMinutes);
-                
-                if (LocalDateTime.now().isBefore(unlockTime)) {
-                    long minutesRemaining = Duration.between(LocalDateTime.now(), unlockTime).toMinutes();
+            // Verificar si el usuario está bloqueado usando lógica de dominio
+            if (login.isAccountLocked(lockDurationMinutes)) {
+                long minutesRemaining = login.getRemainingLockTimeMinutes(lockDurationMinutes);
                     log.warn("User {} is locked. Unlock in {} minutes", request.getUserId(), minutesRemaining);
                     
                     return AuthResponse.builder()
@@ -112,8 +107,6 @@ public class LoginService implements LoginUseCasePort {
                 } else {
                     // Desbloquear usuario si ya pasó el tiempo
                     loginRepository.unlockUser(request.getUserId());
-                    login.setIsLocked(false);
-                    login.setFailedAttempts(0);
                 }
             }
 
@@ -155,7 +148,7 @@ public class LoginService implements LoginUseCasePort {
             }
 
             // Generar token JWT
-            String token = jwtTokenProvider.generateToken(request.getUserId());
+            String token = tokenProvider.generateToken(request.getUserId());
 
             log.info("User {} authenticated successfully", request.getUserId());
 
