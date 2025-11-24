@@ -21,8 +21,14 @@ class KafkaAccessConsumer:
         
         def consume():
             try:
-                self.consumer = KafkaConsumer(
+                # Subscribe to both check-in and check-out topics
+                topics = [
                     Config.KAFKA_TOPIC_ACCESS_REGISTRATION_REQUEST,
+                    Config.KAFKA_TOPIC_ACCESS_CHECKOUT_REQUEST
+                ]
+                
+                self.consumer = KafkaConsumer(
+                    *topics,
                     bootstrap_servers=Config.KAFKA_BOOTSTRAP_SERVERS,
                     value_deserializer=lambda m: json.loads(m.decode('utf-8')),
                     group_id='access-control-service-group',

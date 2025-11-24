@@ -10,6 +10,8 @@ public interface SagaRepositoryPort {
     
     Saga save(Saga saga);
     
+    Saga saveAndFlush(Saga saga);
+    
     Optional<Saga> findById(String id);
     
     List<Saga> findByEmployeeId(String employeeId);

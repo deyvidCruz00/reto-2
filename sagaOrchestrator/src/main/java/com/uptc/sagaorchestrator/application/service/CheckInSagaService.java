@@ -45,7 +45,7 @@ public class CheckInSagaService implements SagaUseCasePort {
                 .createdAt(LocalDateTime.now())
                 .build();
         
-        saga = sagaRepository.save(saga);
+        saga = sagaRepository.saveAndFlush(saga);
         
         // Log inicial
         addLog(saga, SagaLog.LogLevel.INFO, "Saga CHECK_IN iniciada", 
@@ -73,6 +73,9 @@ public class CheckInSagaService implements SagaUseCasePort {
         
         addLog(saga, SagaLog.LogLevel.INFO, "Iniciando validación de empleado", 
                "Employee ID: " + saga.getEmployeeId());
+        
+        // CRITICAL: Save before sending Kafka message to ensure visibility
+        saga = sagaRepository.saveAndFlush(saga);
         
         // Enviar mensaje Kafka para validar empleado
         EmployeeValidationRequest request = EmployeeValidationRequest.builder()
@@ -177,6 +180,9 @@ public class CheckInSagaService implements SagaUseCasePort {
         
         addLog(saga, SagaLog.LogLevel.INFO, "Registrando entrada de acceso", 
                "Employee: " + saga.getEmployeeName());
+        
+        // CRITICAL: Save before sending Kafka message to ensure visibility
+        saga = sagaRepository.saveAndFlush(saga);
         
         // Enviar mensaje Kafka para registrar acceso
         AccessRegistrationRequest request = AccessRegistrationRequest.builder()

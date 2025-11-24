@@ -1,6 +1,6 @@
 -- Crear bases de datos
-CREATE DATABASE IF NOT EXISTS logindb;
-CREATE DATABASE IF NOT EXISTS accesscontroldb;
+SELECT 'CREATE DATABASE logindb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'logindb')\gexec
+SELECT 'CREATE DATABASE accesscontroldb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'accesscontroldb')\gexec
 
 -- Conectar a LoginDB
 \c logindb;

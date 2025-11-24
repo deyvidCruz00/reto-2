@@ -21,6 +21,11 @@ public class SagaRepositoryAdapter implements SagaRepositoryPort {
     }
     
     @Override
+    public Saga saveAndFlush(Saga saga) {
+        return jpaRepository.saveAndFlush(saga);
+    }
+    
+    @Override
     public Optional<Saga> findById(String id) {
         return jpaRepository.findById(id);
     }

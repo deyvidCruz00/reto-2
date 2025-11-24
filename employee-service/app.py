@@ -37,16 +37,7 @@ REQUEST_DURATION = Histogram(
     ['method', 'endpoint']
 )
 
-# Dependency Injection - Hexagonal Architecture
-repository = MongoDBEmployeeRepository()
-event_publisher = KafkaEventPublisher()
-employee_use_case = EmployeeUseCase(repository, event_publisher)
-
-# Create blueprint with dependency injection
-employee_bp = create_employee_blueprint(employee_use_case)
-
-# Register blueprints
-app.register_blueprint(employee_bp)
+@app.before_request
 def before_request():
     request._start_time = time.time()
 
@@ -67,11 +58,7 @@ def after_request(response):
     
     return response
 
-# Register blueprints
-app.register_blueprint(employee_bp)
-
-# Middleware for metrics
-@app.before_request
+@app.route('/')
 def index():
     return jsonify({
         "service": "Employee Service",
@@ -146,6 +133,16 @@ if __name__ == '__main__':
         logger.info("Connecting to MongoDB...")
         mongodb.connect()
         
+        # Initialize dependencies after MongoDB connection
+        logger.info("Initializing dependencies...")
+        repository = MongoDBEmployeeRepository()
+        event_publisher = KafkaEventPublisher()
+        employee_use_case = EmployeeUseCase(repository, event_publisher)
+        
+        # Create and register blueprint
+        employee_bp = create_employee_blueprint(employee_use_case)
+        app.register_blueprint(employee_bp)
+        
         # Start Kafka consumer for SAGA
         logger.info("Starting Kafka consumer for SAGA validation requests...")
         kafka_consumer = KafkaEmployeeValidationConsumer(employee_use_case, event_publisher)
@@ -164,4 +161,5 @@ if __name__ == '__main__':
         raise
     finally:
         mongodb.close()
-        event_publisher.close()
+        if 'event_publisher' in locals():
+            event_publisher.close()
