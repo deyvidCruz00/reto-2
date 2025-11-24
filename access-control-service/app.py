@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Create Flask app
 app = Flask(__name__)
-CORS(app)
+# CORS(app)  # Disabled - API Gateway handles CORS
 
 # ==============================================
 # DEPENDENCY INJECTION (Hexagonal Architecture)

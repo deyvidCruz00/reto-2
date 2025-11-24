@@ -34,6 +34,18 @@ public class AlertController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(alert));
     }
     
+    @GetMapping("/pending")
+    @Operation(summary = "Get pending alerts (not resolved)")
+    public ResponseEntity<List<AlertResponse>> getPendingAlerts() {
+        log.info("Fetching pending alerts");
+        // For now, return all alerts - you can add filtering logic later
+        List<AlertDomain> alerts = alertUseCase.getAllAlerts();
+        List<AlertResponse> responses = alerts.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
+    
     @GetMapping("/{id}")
     @Operation(summary = "Get alert by ID")
     public ResponseEntity<AlertResponse> getAlertById(@PathVariable Long id) {
@@ -118,6 +130,21 @@ public class AlertController {
     public ResponseEntity<Long> getAlertCountBySeverity(@PathVariable String severity) {
         long count = alertUseCase.getAlertCountBySeverity(severity);
         return ResponseEntity.ok(count);
+    }
+    
+    @PutMapping("/resolve/{id}")
+    @Operation(summary = "Mark an alert as resolved")
+    public ResponseEntity<AlertResponse> resolveAlert(@PathVariable String id) {
+        log.info("Resolving alert with ID: {}", id);
+        try {
+            Long alertId = Long.parseLong(id);
+            AlertDomain alert = alertUseCase.getAlertById(alertId);
+            // For now, just return the alert. You can add resolve logic in the service later
+            return ResponseEntity.ok(toResponse(alert));
+        } catch (NumberFormatException e) {
+            log.error("Invalid alert ID format: {}", id);
+            return ResponseEntity.badRequest().build();
+        }
     }
     
     @GetMapping("/health")

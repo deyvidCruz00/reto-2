@@ -46,7 +46,6 @@ spring:
           predicates:
             - Path=/alert/**
           filters:
-            - RewritePath=/alert/(?<segment>.*), /$1
             - name: CircuitBreaker
               args:
                 name: alertService
@@ -65,21 +64,23 @@ spring:
                 fallbackUri: forward:/fallback/saga
       
       default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
       
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: false
-            maxAge: 3600
+      # CORS configuration moved to CorsConfig.java
+      # globalcors:
+      #   corsConfigurations:
+      #     '[/**]':
+      #       allowedOrigins: 
+      #         - "http://localhost:4200"
+      #       allowedMethods:
+      #         - GET
+      #         - POST
+      #         - PUT
+      #         - DELETE
+      #         - OPTIONS
+      #       allowedHeaders: "*"
+      #       allowCredentials: true
+      #       maxAge: 3600
   
   # Redis Configuration for Rate Limiting
   data:

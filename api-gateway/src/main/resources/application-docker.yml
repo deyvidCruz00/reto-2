@@ -34,7 +34,6 @@ spring:
           predicates:
             - Path=/access/**
           filters:
-            - RewritePath=/access/(?<segment>.*), /$1
             - name: CircuitBreaker
               args:
                 name: accessService
@@ -46,7 +45,6 @@ spring:
           predicates:
             - Path=/alert/**
           filters:
-            - RewritePath=/alert/(?<segment>.*), /$1
             - name: CircuitBreaker
               args:
                 name: alertService
