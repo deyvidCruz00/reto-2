@@ -1,0 +1,228 @@
+.control-acceso-container {
+  h1 {
+    margin: 0 0 24px 0;
+    font-size: 32px;
+    font-weight: 400;
+  }
+  
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+    
+    @media (max-width: 960px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .register-panel {
+    .full-width {
+      width: 100%;
+    }
+    
+    .employee-info {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      margin: 16px 0;
+      
+      .employee-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: #3f51b5;
+      }
+      
+      .employee-details {
+        flex: 1;
+        
+        h3 {
+          margin: 0 0 8px 0;
+          font-size: 20px;
+        }
+        
+        p {
+          margin: 4px 0;
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.7);
+        }
+        
+        mat-chip {
+          margin-top: 8px;
+        }
+      }
+    }
+    
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .no-employee {
+      text-align: center;
+      padding: 40px;
+      color: rgba(0, 0, 0, 0.6);
+      
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: rgba(0, 0, 0, 0.3);
+      }
+      
+      p {
+        margin: 16px 0 0 0;
+      }
+    }
+    
+    .processing {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px;
+      color: #3f51b5;
+    }
+  }
+  
+  .stats-panel {
+    mat-card-header {
+      mat-icon.success-icon {
+        color: #4caf50;
+      }
+    }
+    
+    .count {
+      font-size: 48px;
+      text-align: center;
+      color: #4caf50;
+      margin: 20px 0;
+    }
+    
+    .employees-inside-list {
+      max-height: 300px;
+      overflow-y: auto;
+      
+      .inside-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
+        mat-icon.entry-icon {
+          color: #4caf50;
+          margin-right: 12px;
+        }
+        
+        .inside-info {
+          flex: 1;
+          
+          .doc-number {
+            margin: 0;
+            font-weight: 500;
+          }
+          
+          .entry-time {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+          }
+        }
+      }
+    }
+    
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+  
+  .history-card {
+    .filters {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      
+      mat-form-field {
+        flex: 1;
+      }
+    }
+    
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    .access-table {
+      width: 100%;
+      
+      .datetime-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          
+          &.entry-icon {
+            color: #4caf50;
+          }
+          
+          &.exit-icon {
+            color: #f44336;
+          }
+        }
+      }
+      
+      .inside-chip {
+        background-color: #c8e6c9;
+        color: #2e7d32;
+      }
+    }
+    
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      padding: 60px;
+    }
+    
+    .no-data {
+      text-align: center;
+      padding: 60px;
+      color: rgba(0, 0, 0, 0.6);
+      
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: rgba(0, 0, 0, 0.3);
+      }
+      
+      p {
+        margin: 16px 0 0 0;
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+.active-chip {
+  background-color: #c8e6c9;
+  color: #2e7d32;
+}
+
+.inactive-chip {
+  background-color: #ffcdd2;
+  color: #c62828;
+}

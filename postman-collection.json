@@ -1,0 +1,851 @@
+{
+	"info": {
+		"_postman_id": "saga-system-collection",
+		"name": "Sistema SAGA - Control de Acceso",
+		"description": "Colección completa de endpoints para probar el sistema de control de acceso con patrón SAGA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Employee Service",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Create Employee",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('employee_document', jsonData.data.document);",
+									"    pm.environment.set('employee_name', jsonData.data.firstname + ' ' + jsonData.data.lastname);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"document\": \"TEST{{$randomInt}}\",\n    \"firstname\": \"Juan\",\n    \"lastname\": \"Perez\",\n    \"email\": \"juan.perez@empresa.com\",\n    \"phone\": \"555-1234\",\n    \"role\": \"Developer\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8082/employees",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["employees"]
+						}
+					}
+				},
+				{
+					"name": "Get All Employees",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/employees",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["employees"]
+						}
+					}
+				},
+				{
+					"name": "Get Employee by Document",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/employees/{{employee_document}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["employees", "{{employee_document}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Employee",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstname\": \"Juan Carlos\",\n    \"lastname\": \"Perez Lopez\",\n    \"email\": \"juan.carlos@empresa.com\",\n    \"phone\": \"555-5678\",\n    \"role\": \"Senior Developer\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8082/employees/{{employee_document}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["employees", "{{employee_document}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Employee",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8082/employees/{{employee_document}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8082",
+							"path": ["employees", "{{employee_document}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. SAGA Orchestrator",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8085/api/saga/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8085",
+							"path": ["api", "saga", "health"]
+						}
+					}
+				},
+				{
+					"name": "Check-In SAGA",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('saga_id', jsonData.sagaId);",
+									"    console.log('SAGA ID: ' + jsonData.sagaId);",
+									"    console.log('Status: ' + jsonData.status);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"employeeId\": \"{{employee_document}}\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8085/api/saga/check-in",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8085",
+							"path": ["api", "saga", "check-in"]
+						}
+					}
+				},
+				{
+					"name": "Get SAGA Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8085/api/saga/{{saga_id}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8085",
+							"path": ["api", "saga", "{{saga_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Check-Out SAGA",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('checkout_saga_id', jsonData.sagaId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"employeeId\": \"{{employee_document}}\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8085/api/saga/check-out",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8085",
+							"path": ["api", "saga", "check-out"]
+						}
+					}
+				},
+				{
+					"name": "Get All SAGAs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8085/api/saga/all",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8085",
+							"path": ["api", "saga", "all"]
+						}
+					}
+				},
+				{
+					"name": "Get SAGAs by Employee",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8085/api/saga/employee/{{employee_document}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8085",
+							"path": ["api", "saga", "employee", "{{employee_document}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Access Control Service",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8083/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8083",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Get All Access Records",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8083/access",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8083",
+							"path": ["access"]
+						}
+					}
+				},
+				{
+					"name": "Get Access by Employee",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8083/access/employee/{{employee_document}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8083",
+							"path": ["access", "employee", "{{employee_document}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Active Access by Employee",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8083/access/active/{{employee_document}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8083",
+							"path": ["access", "active", "{{employee_document}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Alert Service",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8084/health",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8084",
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Get All Alerts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8084/alerts",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8084",
+							"path": ["alerts"]
+						}
+					}
+				},
+				{
+					"name": "Get Alerts by Employee",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8084/alerts/employee/{{employee_document}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8084",
+							"path": ["alerts", "employee", "{{employee_document}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Alerts by Severity",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8084/alerts/severity/HIGH",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8084",
+							"path": ["alerts", "severity", "HIGH"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Test Scenarios",
+			"item": [
+				{
+					"name": "Scenario 1: Complete Flow",
+					"item": [
+						{
+							"name": "Step 1: Create Employee",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Employee created successfully', function() {",
+											"    pm.response.to.have.status(201);",
+											"    var jsonData = pm.response.json();",
+											"    pm.environment.set('test_employee', jsonData.data.document);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"document\": \"FLOW{{$randomInt}}\",\n    \"firstname\": \"Test\",\n    \"lastname\": \"User\",\n    \"email\": \"test@test.com\",\n    \"phone\": \"555-0000\",\n    \"role\": \"Tester\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8082/employees",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8082",
+									"path": ["employees"]
+								}
+							}
+						},
+						{
+							"name": "Step 2: Check-In",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Check-in initiated', function() {",
+											"    pm.response.to.have.status(200);",
+											"    var jsonData = pm.response.json();",
+											"    pm.environment.set('test_saga_id', jsonData.sagaId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"employeeId\": \"{{test_employee}}\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8085/api/saga/check-in",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8085",
+									"path": ["api", "saga", "check-in"]
+								}
+							}
+						},
+						{
+							"name": "Step 3: Wait and Verify (5 sec)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"setTimeout(function(){}, 5000);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('SAGA completed successfully', function() {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.status).to.equal('COMPLETED');",
+											"    pm.expect(jsonData.employeeName).to.not.be.empty;",
+											"    pm.expect(jsonData.accessId).to.not.be.empty;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8085/api/saga/{{test_saga_id}}",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8085",
+									"path": ["api", "saga", "{{test_saga_id}}"]
+								}
+							}
+						},
+						{
+							"name": "Step 4: Verify Access Record",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Access record created', function() {",
+											"    pm.response.to.have.status(200);",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.be.an('array');",
+											"    pm.expect(jsonData.data.length).to.be.above(0);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8083/access/employee/{{test_employee}}",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8083",
+									"path": ["access", "employee", "{{test_employee}}"]
+								}
+							}
+						},
+						{
+							"name": "Step 5: Check-Out",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Check-out initiated', function() {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"employeeId\": \"{{test_employee}}\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8085/api/saga/check-out",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8085",
+									"path": ["api", "saga", "check-out"]
+								}
+							}
+						},
+						{
+							"name": "Step 6: Verify Check-Out",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"setTimeout(function(){}, 5000);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Check-out completed', function() {",
+											"    pm.response.to.have.status(200);",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.be.an('array');",
+											"    var latestAccess = jsonData.data[0];",
+											"    pm.expect(latestAccess.exit_datetime).to.not.be.null;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8083/access/employee/{{test_employee}}",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8083",
+									"path": ["access", "employee", "{{test_employee}}"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Scenario 2: Duplicate Check-In",
+					"item": [
+						{
+							"name": "First Check-In",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('First check-in successful', function() {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"employeeId\": \"{{employee_document}}\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8085/api/saga/check-in",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8085",
+									"path": ["api", "saga", "check-in"]
+								}
+							}
+						},
+						{
+							"name": "Duplicate Check-In",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"setTimeout(function(){}, 5000);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Duplicate check-in should fail', function() {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.errorMessage).to.include('active');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"employeeId\": \"{{employee_document}}\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8085/api/saga/check-in",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8085",
+									"path": ["api", "saga", "check-in"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Scenario 3: Check-Out Without Check-In",
+					"item": [
+						{
+							"name": "Create New Employee",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"pm.environment.set('no_checkin_employee', jsonData.data.document);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"document\": \"NOCI{{$randomInt}}\",\n    \"firstname\": \"NoCheckIn\",\n    \"lastname\": \"Test\",\n    \"email\": \"noci@test.com\",\n    \"phone\": \"555-0001\",\n    \"role\": \"Tester\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8082/employees",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8082",
+									"path": ["employees"]
+								}
+							}
+						},
+						{
+							"name": "Try Check-Out",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Check-out without check-in should fail', function() {",
+											"    var jsonData = pm.response.json();",
+											"    setTimeout(function() {",
+											"        pm.sendRequest({",
+											"            url: 'http://localhost:8085/api/saga/' + jsonData.sagaId,",
+											"            method: 'GET'",
+											"        }, function(err, res) {",
+											"            var saga = res.json();",
+											"            pm.expect(saga.status).to.equal('FAILED');",
+											"        });",
+											"    }, 5000);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"employeeId\": \"{{no_checkin_employee}}\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8085/api/saga/check-out",
+									"protocol": "http",
+									"host": ["localhost"],
+									"port": "8085",
+									"path": ["api", "saga", "check-out"]
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "employee_document",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "employee_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "saga_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "checkout_saga_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_employee",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "test_saga_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "no_checkin_employee",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

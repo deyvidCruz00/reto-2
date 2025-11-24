@@ -1,0 +1,124 @@
+<div class="dashboard-container">
+  <h1>Dashboard</h1>
+  
+  <!-- Estadísticas principales -->
+  <div class="stats-grid">
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>people</mat-icon>
+        <mat-card-title>Total Empleados</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <h2>{{ stats().totalEmployees }}</h2>
+        <p class="stat-subtitle">Registrados en el sistema</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="success-icon">check_circle</mat-icon>
+        <mat-card-title>Empleados Activos</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <h2>{{ stats().activeEmployees }}</h2>
+        <p class="stat-subtitle">Estado activo</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="warning-icon">meeting_room</mat-icon>
+        <mat-card-title>Dentro de las Instalaciones</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <h2>{{ stats().employeesInside }}</h2>
+        <p class="stat-subtitle">En este momento</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="info-icon">today</mat-icon>
+        <mat-card-title>Accesos Hoy</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <h2>{{ stats().todayAccess }}</h2>
+        <p class="stat-subtitle">Registros de hoy</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Actividad reciente y Alertas -->
+  <div class="content-grid">
+    <!-- Actividad Reciente -->
+    <mat-card class="recent-activity-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>history</mat-icon>
+        <mat-card-title>Actividad Reciente</mat-card-title>
+        <mat-card-subtitle>Últimos accesos registrados</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (loading()) {
+          <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+        } @else if (recentAccess().length === 0) {
+          <p class="no-data">No hay registros de acceso recientes</p>
+        } @else {
+          <div class="activity-list">
+            @for (access of recentAccess(); track access.employeeDocumentNumber + access.entry_datetime) {
+              <div class="activity-item">
+                <mat-icon [class]="access.exit_datetime ? 'exit-icon' : 'entry-icon'">
+                  {{ access.exit_datetime ? 'logout' : 'login' }}
+                </mat-icon>
+                <div class="activity-info">
+                  <p class="activity-employee">{{ access.employeeDocumentNumber }}</p>
+                  <p class="activity-time">
+                    {{ access.exit_datetime ? 'Salida' : 'Entrada' }}: 
+                    {{ formatDateTime(access.exit_datetime || access.entry_datetime) }}
+                  </p>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Alertas Pendientes -->
+    <mat-card class="alerts-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="error-icon">warning</mat-icon>
+        <mat-card-title>Alertas Pendientes</mat-card-title>
+        <mat-card-subtitle>Requieren atención</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (loading()) {
+          <div class="loading-container">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+        } @else if (pendingAlerts().length === 0) {
+          <p class="no-data success-text">No hay alertas pendientes</p>
+        } @else {
+          <div class="alerts-list">
+            @for (alert of pendingAlerts(); track alert.id) {
+              <mat-card class="alert-item" [class.alert-critical]="alert.severity === 'CRITICAL'">
+                <div class="alert-content">
+                  <div class="alert-header">
+                    <mat-icon>{{ getAlertIcon(alert.code) }}</mat-icon>
+                    <span class="alert-code">{{ formatAlertCode(alert.code) }}</span>
+                  </div>
+                  <p class="alert-message">{{ alert.description }}</p>
+                  <p class="alert-time">{{ formatDateTime(alert.timestamp) }}</p>
+                </div>
+                <button mat-icon-button (click)="resolveAlert(alert.id)" matTooltip="Resolver alerta">
+                  <mat-icon>check</mat-icon>
+                </button>
+              </mat-card>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
