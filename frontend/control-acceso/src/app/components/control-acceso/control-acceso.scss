@@ -50,8 +50,23 @@
           color: rgba(0, 0, 0, 0.7);
         }
         
-        mat-chip {
+        .status-chips {
+          display: flex;
+          gap: 8px;
           margin-top: 8px;
+          flex-wrap: wrap;
+          
+          mat-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+            }
+          }
         }
       }
     }
@@ -61,6 +76,21 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-top: 16px;
+      
+      button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 16px 8px;
+        height: auto;
+        
+        .disabled-hint {
+          font-size: 11px;
+          opacity: 0.7;
+          font-weight: 400;
+        }
+      }
     }
     
     .no-employee {
@@ -225,4 +255,14 @@
 .inactive-chip {
   background-color: #ffcdd2;
   color: #c62828;
+}
+
+.inside-chip {
+  background-color: #c8e6c9 !important;
+  color: #2e7d32 !important;
+}
+
+.outside-chip {
+  background-color: #fff3e0 !important;
+  color: #e65100 !important;
 }

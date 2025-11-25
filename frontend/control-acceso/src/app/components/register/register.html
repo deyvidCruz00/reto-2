@@ -1,0 +1,108 @@
+<div class="register-container">
+  <mat-card class="register-card">
+    <mat-card-header>
+      <div class="header-icon">
+        <mat-icon>person_add</mat-icon>
+      </div>
+      <mat-card-title>Registro de Usuario</mat-card-title>
+      <mat-card-subtitle>Sistema de Control de Acceso</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form #registerForm="ngForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>ID de Usuario</mat-label>
+          <input 
+            matInput 
+            type="number" 
+            [(ngModel)]="userId" 
+            name="userId"
+            required
+            autocomplete="username"
+            [disabled]="loading()"
+            placeholder="Ingrese su ID de empleado">
+          <mat-icon matPrefix>badge</mat-icon>
+          <mat-hint>Número único de identificación</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contraseña</mat-label>
+          <input 
+            matInput 
+            [type]="hidePassword() ? 'password' : 'text'"
+            [(ngModel)]="password" 
+            name="password"
+            required
+            autocomplete="new-password"
+            [disabled]="loading()"
+            placeholder="Mínimo 6 caracteres">
+          <mat-icon matPrefix>lock</mat-icon>
+          <button 
+            mat-icon-button 
+            matSuffix 
+            type="button"
+            (click)="togglePasswordVisibility()"
+            [disabled]="loading()">
+            <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-hint>Debe contener al menos 6 caracteres</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Confirmar Contraseña</mat-label>
+          <input 
+            matInput 
+            [type]="hideConfirmPassword() ? 'password' : 'text'"
+            [(ngModel)]="confirmPassword" 
+            name="confirmPassword"
+            required
+            autocomplete="new-password"
+            [disabled]="loading()"
+            placeholder="Repita la contraseña">
+          <mat-icon matPrefix>lock_outline</mat-icon>
+          <button 
+            mat-icon-button 
+            matSuffix 
+            type="button"
+            (click)="toggleConfirmPasswordVisibility()"
+            [disabled]="loading()">
+            <mat-icon>{{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit"
+          class="submit-button"
+          [disabled]="loading() || !registerForm.valid">
+          @if (loading()) {
+            <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+            <span>Registrando...</span>
+          } @else {
+            <mat-icon>person_add</mat-icon>
+            <span>Registrar Usuario</span>
+          }
+        </button>
+      </form>
+
+      <div class="login-link">
+        <p>¿Ya tienes una cuenta? <a routerLink="/login">Inicia sesión aquí</a></p>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="security-notice">
+        <mat-icon>info</mat-icon>
+        <div class="notice-content">
+          <h4>Requisitos de Seguridad:</h4>
+          <ul>
+            <li>El ID de usuario debe ser único</li>
+            <li>La contraseña debe tener al menos 6 caracteres</li>
+            <li>Las contraseñas son encriptadas con BCrypt</li>
+            <li>Solo administradores pueden registrar usuarios</li>
+          </ul>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -36,6 +36,11 @@ class AccessRepositoryPort(ABC):
     ) -> List[Access]:
         """Find access records for an employee within a date range"""
         pass
+    
+    @abstractmethod
+    def find_all_active(self) -> List[Access]:
+        """Find all active access records (employees currently inside)"""
+        pass
 
 
 class EventPublisherPort(ABC):
@@ -83,6 +88,11 @@ class AccessUseCasePort(ABC):
         end_date_str: str
     ) -> dict:
         """Get employee access report by date range"""
+        pass
+    
+    @abstractmethod
+    def get_all_active_accesses(self) -> dict:
+        """Get all active access records (employees currently inside)"""
         pass
     
     @abstractmethod

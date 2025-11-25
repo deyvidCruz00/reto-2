@@ -42,6 +42,7 @@ export class ControlAcceso implements OnInit {
   selectedEmployee = signal<Employee | null>(null);
   searchPerformed = signal(false);
   processingAccess = signal(false);
+  employeeHasActiveAccess = signal(false);
   
   employeesInside = signal(0);
   employeesInsideList = signal<Access[]>([]);
@@ -81,6 +82,10 @@ export class ControlAcceso implements OnInit {
         
         if (!employee) {
           this.showMessage('Empleado no encontrado', 'error');
+          this.employeeHasActiveAccess.set(false);
+        } else {
+          // Verificar si el empleado tiene un acceso activo
+          this.checkEmployeeActiveAccess(employee.documentNumber);
         }
       },
       error: (err) => {
@@ -90,14 +95,36 @@ export class ControlAcceso implements OnInit {
     });
   }
 
+  checkEmployeeActiveAccess(documentNumber: string): void {
+    this.accessService.getAllAccess().subscribe({
+      next: (response) => {
+        const accesses = Array.isArray(response.data) ? response.data : [];
+        const activeAccess = accesses.find(
+          (a: any) => a.employeeId === documentNumber && !a.exitDatetime
+        );
+        this.employeeHasActiveAccess.set(!!activeAccess);
+      },
+      error: (err) => {
+        console.error('Error verificando acceso activo:', err);
+        this.employeeHasActiveAccess.set(false);
+      }
+    });
+  }
+
   checkIn(): void {
     const employee = this.selectedEmployee();
     if (!employee) return;
 
+    if (this.employeeHasActiveAccess()) {
+      this.showMessage('El empleado ya tiene una entrada activa', 'error');
+      return;
+    }
+
     this.processingAccess.set(true);
     this.accessService.checkIn(employee.documentNumber).subscribe({
-      next: () => {
-        this.showMessage('Entrada registrada exitosamente', 'success');
+      next: (response) => {
+        this.showMessage(response.message || 'Entrada registrada exitosamente', 'success');
+        this.employeeHasActiveAccess.set(true);
         this.resetForm();
         this.loadEmployeesInside();
         this.loadAccessHistory();
@@ -105,7 +132,8 @@ export class ControlAcceso implements OnInit {
       },
       error: (err) => {
         console.error('Error registrando entrada:', err);
-        this.showMessage(err.error?.message || 'Error registrando entrada', 'error');
+        const errorMsg = err.error?.message || 'Error registrando entrada';
+        this.showMessage(errorMsg, 'error');
         this.processingAccess.set(false);
       }
     });
@@ -115,10 +143,16 @@ export class ControlAcceso implements OnInit {
     const employee = this.selectedEmployee();
     if (!employee) return;
 
+    if (!this.employeeHasActiveAccess()) {
+      this.showMessage('El empleado no tiene una entrada activa', 'error');
+      return;
+    }
+
     this.processingAccess.set(true);
     this.accessService.checkOut(employee.documentNumber).subscribe({
-      next: () => {
-        this.showMessage('Salida registrada exitosamente', 'success');
+      next: (response) => {
+        this.showMessage(response.message || 'Salida registrada exitosamente', 'success');
+        this.employeeHasActiveAccess.set(false);
         this.resetForm();
         this.loadEmployeesInside();
         this.loadAccessHistory();
@@ -126,7 +160,8 @@ export class ControlAcceso implements OnInit {
       },
       error: (err) => {
         console.error('Error registrando salida:', err);
-        this.showMessage(err.error?.message || 'Error registrando salida', 'error');
+        const errorMsg = err.error?.message || 'Error registrando salida';
+        this.showMessage(errorMsg, 'error');
         this.processingAccess.set(false);
       }
     });
@@ -167,6 +202,7 @@ export class ControlAcceso implements OnInit {
     this.documentNumber = '';
     this.selectedEmployee.set(null);
     this.searchPerformed.set(false);
+    this.employeeHasActiveAccess.set(false);
   }
 
   formatDate(date: Date): string {

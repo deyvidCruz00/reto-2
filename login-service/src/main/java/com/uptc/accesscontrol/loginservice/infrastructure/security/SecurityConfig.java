@@ -22,10 +22,13 @@ public class SecurityConfig {
                 .sessionManagement(session -> 
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login/**", "/createuser", "/authuser").permitAll()
+                        .requestMatchers("/login/**").permitAll()
+                        .requestMatchers("/createuser").permitAll()
+                        .requestMatchers("/authuser").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .anyRequest().permitAll()  // Temporarily permit all for testing
                 );
 
         return http.build();

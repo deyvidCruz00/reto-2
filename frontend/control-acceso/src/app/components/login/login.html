@@ -1,0 +1,94 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <div class="login-header">
+        <mat-icon class="login-icon">lock</mat-icon>
+        <h1>Sistema de Control de Acceso</h1>
+        <p class="subtitle">Ingrese sus credenciales</p>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <!-- User ID Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>ID de Usuario</mat-label>
+          <input 
+            matInput 
+            type="number" 
+            [(ngModel)]="userId" 
+            name="userId"
+            required
+            [disabled]="loading()"
+            placeholder="Ingrese su ID de usuario"
+            autofocus>
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+
+        <!-- Password Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contraseña</mat-label>
+          <input 
+            matInput 
+            [type]="hidePassword() ? 'password' : 'text'"
+            [(ngModel)]="password"
+            name="password"
+            required
+            [disabled]="loading()"
+            placeholder="Ingrese su contraseña"
+            (keyup.enter)="onSubmit()">
+          <mat-icon matPrefix>key</mat-icon>
+          <button 
+            mat-icon-button 
+            matSuffix 
+            type="button"
+            (click)="togglePasswordVisibility()"
+            [disabled]="loading()">
+            <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <!-- Attempt Counter -->
+        @if (attemptCount() > 0) {
+          <div class="attempt-warning">
+            <mat-icon>warning</mat-icon>
+            <span>Intentos fallidos: {{ attemptCount() }} / {{ maxAttempts }}</span>
+          </div>
+        }
+
+        <!-- Login Button -->
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit"
+          class="login-button"
+          [disabled]="loading() || !userId || !password">
+          @if (loading()) {
+            <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+            <span>Autenticando...</span>
+          } @else {
+            <mat-icon>login</mat-icon>
+            <span>Iniciar Sesión</span>
+          }
+        </button>
+      </form>
+
+      <div class="register-link">
+        <p>¿No tienes una cuenta? <a routerLink="/register">Regístrate aquí</a></p>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="security-notice">
+        <mat-icon>info</mat-icon>
+        <div>
+          <p><strong>Nota de seguridad:</strong></p>
+          <ul>
+            <li>Máximo 3 intentos fallidos</li>
+            <li>Bloqueo automático por 10 minutos</li>
+            <li>Token válido por 24 horas</li>
+          </ul>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

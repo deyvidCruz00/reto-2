@@ -23,22 +23,43 @@
               <h3>{{ selectedEmployee()!.firstName }} {{ selectedEmployee()!.lastName }}</h3>
               <p>Documento: {{ selectedEmployee()!.documentNumber }}</p>
               <p>Email: {{ selectedEmployee()!.email }}</p>
-              <mat-chip [class]="selectedEmployee()!.status ? 'active-chip' : 'inactive-chip'">
-                {{ selectedEmployee()!.status ? 'Activo' : 'Inactivo' }}
-              </mat-chip>
+              <div class="status-chips">
+                <mat-chip [class]="selectedEmployee()!.status ? 'active-chip' : 'inactive-chip'">
+                  {{ selectedEmployee()!.status ? 'Activo' : 'Inactivo' }}
+                </mat-chip>
+                @if (employeeHasActiveAccess()) {
+                  <mat-chip class="inside-chip">
+                    <mat-icon>login</mat-icon>
+                    Dentro de las instalaciones
+                  </mat-chip>
+                } @else {
+                  <mat-chip class="outside-chip">
+                    <mat-icon>logout</mat-icon>
+                    Fuera de las instalaciones
+                  </mat-chip>
+                }
+              </div>
             </div>
           </div>
 
           <div class="action-buttons">
             <button mat-raised-button color="primary" (click)="checkIn()" 
-                    [disabled]="!selectedEmployee()!.status || processingAccess()" class="full-width">
+                    [disabled]="!selectedEmployee()!.status || processingAccess() || employeeHasActiveAccess()" 
+                    class="full-width">
               <mat-icon>login</mat-icon>
               Registrar Entrada
+              @if (employeeHasActiveAccess()) {
+                <span class="disabled-hint">(Ya está dentro)</span>
+              }
             </button>
             <button mat-raised-button color="accent" (click)="checkOut()" 
-                    [disabled]="!selectedEmployee()!.status || processingAccess()" class="full-width">
+                    [disabled]="!selectedEmployee()!.status || processingAccess() || !employeeHasActiveAccess()" 
+                    class="full-width">
               <mat-icon>logout</mat-icon>
               Registrar Salida
+              @if (!employeeHasActiveAccess()) {
+                <span class="disabled-hint">(No está dentro)</span>
+              }
             </button>
           </div>
         } @else if (searchPerformed()) {
