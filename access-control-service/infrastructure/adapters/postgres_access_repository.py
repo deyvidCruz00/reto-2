@@ -214,6 +214,32 @@ class PostgresAccessRepository(AccessRepositoryPort):
         except Exception as e:
             logger.error(f"Error finding accesses by employee and date range: {e}")
             return []
+    
+    def find_all_active(self) -> List[Access]:
+        """
+        Find all active access records (employees currently inside)
+        
+        Returns:
+            List[Access]: List of active access records (without exit_datetime)
+        """
+        try:
+            session = self._get_session()
+            
+            # Import SQLAlchemy model here to avoid circular dependency
+            from models.access import Access as AccessModel
+            
+            access_models = session.query(AccessModel).filter(
+                AccessModel.exit_datetime == None
+            ).order_by(AccessModel.access_datetime.desc()).all()
+            
+            logger.info(f"Found {len(access_models)} active accesses")
+            
+            # Convert SQLAlchemy models to domain entities
+            return [self._to_domain_entity(model) for model in access_models]
+            
+        except Exception as e:
+            logger.error(f"Error finding all active accesses: {e}")
+            return []
 
     def _to_domain_entity(self, model) -> Access:
         """

@@ -8,7 +8,7 @@ from domain.ports.employee_ports import (
     EventPublisherPort
 )
 from domain.entities.employee import Employee
-from application.dto.employee_dto import EmployeeCreateDTO, EmployeeUpdateDTO
+from application.dto.employee_dto import EmployeeCreateDTO, EmployeeUpdateDTO, EmployeeResponseDTO
 import logging
 
 logger = logging.getLogger(__name__)
@@ -44,10 +44,13 @@ class EmployeeUseCase(EmployeeUseCasePort):
             # Publish event
             self.event_publisher.publish_employee_created(employee)
             
+            # Convert to response DTO with camelCase
+            response_dto = EmployeeResponseDTO(**employee.model_dump())
+            
             return {
                 "success": True,
                 "message": "Employee created successfully",
-                "data": employee.model_dump()
+                "data": response_dto.model_dump(by_alias=True, mode='json')
             }
         except Exception as e:
             logger.error(f"Error in create_employee: {e}")
@@ -84,10 +87,13 @@ class EmployeeUseCase(EmployeeUseCasePort):
                 # Publish event
                 self.event_publisher.publish_employee_updated(employee)
                 
+                # Convert to response DTO with camelCase
+                response_dto = EmployeeResponseDTO(**employee.model_dump())
+                
                 return {
                     "success": True,
                     "message": "Employee updated successfully",
-                    "data": employee.model_dump()
+                    "data": response_dto.model_dump(by_alias=True, mode='json')
                 }
             
             return {
@@ -105,10 +111,15 @@ class EmployeeUseCase(EmployeeUseCasePort):
         """Find all employees"""
         try:
             employees = self.repository.find_all()
+            # Convert to response DTOs with camelCase
+            response_data = [
+                EmployeeResponseDTO(**emp.model_dump()).model_dump(by_alias=True, mode='json')
+                for emp in employees
+            ]
             return {
                 "success": True,
                 "message": f"Found {len(employees)} employees",
-                "data": [emp.model_dump() for emp in employees],
+                "data": response_data,
                 "count": len(employees)
             }
         except Exception as e:
@@ -126,10 +137,12 @@ class EmployeeUseCase(EmployeeUseCasePort):
             employee = self.repository.find_by_document(document)
             
             if employee:
+                # Convert to response DTO with camelCase
+                response_dto = EmployeeResponseDTO(**employee.model_dump())
                 return {
                     "success": True,
                     "message": "Employee found",
-                    "data": employee.model_dump()
+                    "data": response_dto.model_dump(by_alias=True, mode='json')
                 }
             
             return {
@@ -144,7 +157,7 @@ class EmployeeUseCase(EmployeeUseCasePort):
             }
     
     def delete_employee(self, document: str) -> Dict:
-        """Delete an employee (soft delete)"""
+        """Delete an employee (soft delete - deactivate)"""
         try:
             if not self.repository.exists(document):
                 return {
@@ -171,6 +184,36 @@ class EmployeeUseCase(EmployeeUseCasePort):
             return {
                 "success": False,
                 "message": f"Error deleting employee: {str(e)}"
+            }
+    
+    def activate_employee(self, document: str) -> Dict:
+        """Activate an employee (set status to True)"""
+        try:
+            if not self.repository.exists(document):
+                return {
+                    "success": False,
+                    "message": f"Employee with document {document} not found"
+                }
+            
+            # Activate (set status to True)
+            update_data = {"status": True}
+            employee = self.repository.update(document, update_data)
+            
+            if employee:
+                return {
+                    "success": True,
+                    "message": "Employee activated successfully"
+                }
+            
+            return {
+                "success": False,
+                "message": "Error activating employee"
+            }
+        except Exception as e:
+            logger.error(f"Error in activate_employee: {e}")
+            return {
+                "success": False,
+                "message": f"Error activating employee: {str(e)}"
             }
     
     def validate_employee(self, document: str) -> Dict:

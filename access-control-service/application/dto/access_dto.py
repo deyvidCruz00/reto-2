@@ -1,32 +1,42 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from pydantic import BaseModel, Field, field_validator, field_serializer, ConfigDict
+from typing import Optional, Union
 from datetime import datetime
 
 
 class CheckInRequestDTO(BaseModel):
     """DTO for check-in request"""
-    employee_id: str = Field(..., alias='employeeId', min_length=1, max_length=50)
+    model_config = ConfigDict(populate_by_name=True)
     
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
-            "example": {
-                "employeeId": "1234567890"
-            }
-        }
+    employee_id: str = Field(..., alias='employeeId', min_length=1, max_length=50)
 
 
 class CheckOutRequestDTO(BaseModel):
     """DTO for check-out request"""
-    employee_id: str = Field(..., alias='employeeId', min_length=1, max_length=50)
+    model_config = ConfigDict(populate_by_name=True)
     
-    class Config:
-        populate_by_name = True
-        json_schema_extra = {
-            "example": {
-                "employeeId": "1234567890"
-            }
-        }
+    employee_id: str = Field(..., alias='employeeId', min_length=1, max_length=50)
+
+
+class AccessRecordResponseDTO(BaseModel):
+    """DTO for access record response with camelCase for frontend compatibility"""
+    model_config = ConfigDict(populate_by_name=True)
+    
+    id: str = Field(serialization_alias='id')
+    employee_id: str = Field(serialization_alias='employeeId')
+    access_datetime: Optional[Union[datetime, str]] = Field(default=None, serialization_alias='accessDatetime')
+    exit_datetime: Optional[Union[datetime, str]] = Field(default=None, serialization_alias='exitDatetime')
+    duration_minutes: Optional[int] = Field(default=None, serialization_alias='durationMinutes')
+    
+    @field_serializer('access_datetime', 'exit_datetime')
+    def serialize_datetime(self, dt: Union[datetime, str, None], _info) -> Optional[str]:
+        """Convert datetime objects to ISO format strings"""
+        if dt is None:
+            return None
+        if isinstance(dt, str):
+            return dt
+        if isinstance(dt, datetime):
+            return dt.isoformat()
+        return str(dt)
 
 
 class AccessResponseDTO(BaseModel):
@@ -34,21 +44,6 @@ class AccessResponseDTO(BaseModel):
     success: bool
     message: str
     data: Optional[dict] = None
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "success": True,
-                "message": "Check-in registered successfully",
-                "data": {
-                    "id": "507f1f77bcf86cd799439011",
-                    "employee_id": "1234567890",
-                    "access_datetime": "2024-11-12 08:30:00",
-                    "exit_datetime": None,
-                    "duration_minutes": None
-                }
-            }
-        }
 
 
 class AccessReportDTO(BaseModel):

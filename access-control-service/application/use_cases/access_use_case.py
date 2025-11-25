@@ -4,6 +4,7 @@ from domain.ports.access_ports import (
     AccessUseCasePort
 )
 from domain.entities.access import Access
+from application.dto.access_dto import AccessRecordResponseDTO
 from datetime import datetime
 from typing import Dict, List
 import logging
@@ -48,10 +49,19 @@ class AccessUseCase(AccessUseCasePort):
             # Create check-in record
             access = self.repository.create_checkin(employee_id)
             
+            # Convert to DTO with camelCase
+            access_dto = AccessRecordResponseDTO(
+                id=str(access.id),
+                employee_id=access.employee_id,
+                access_datetime=access.access_datetime,
+                exit_datetime=access.exit_datetime,
+                duration_minutes=access.duration_minutes
+            )
+            
             return {
                 "success": True,
                 "message": "Check-in registered successfully",
-                "data": access.to_dict()
+                "data": access_dto.model_dump(by_alias=True, mode='json')
             }
             
         except Exception as e:
@@ -88,10 +98,19 @@ class AccessUseCase(AccessUseCasePort):
             access = self.repository.create_checkout(employee_id)
             
             if access:
+                # Convert to DTO with camelCase
+                access_dto = AccessRecordResponseDTO(
+                    id=str(access.id),
+                    employee_id=access.employee_id,
+                    access_datetime=access.access_datetime,
+                    exit_datetime=access.exit_datetime,
+                    duration_minutes=access.duration_minutes
+                )
+                
                 return {
                     "success": True,
                     "message": "Check-out registered successfully",
-                    "data": access.to_dict()
+                    "data": access_dto.model_dump(by_alias=True, mode='json')
                 }
             
             return {
@@ -123,15 +142,17 @@ class AccessUseCase(AccessUseCasePort):
             # Get all accesses for the date
             accesses = self.repository.find_by_date(target_date)
             
-            # Format response
+            # Format response with DTOs
             data = []
             for access in accesses:
-                data.append({
-                    "employee_id": access.employee_id,
-                    "access_datetime": access.access_datetime.strftime("%Y-%m-%d %H:%M:%S"),
-                    "exit_datetime": access.exit_datetime.strftime("%Y-%m-%d %H:%M:%S") if access.exit_datetime else "Still inside",
-                    "duration_minutes": access.duration_minutes if access.duration_minutes else "N/A"
-                })
+                access_dto = AccessRecordResponseDTO(
+                    id=str(access.id),
+                    employee_id=access.employee_id,
+                    access_datetime=access.access_datetime,
+                    exit_datetime=access.exit_datetime,
+                    duration_minutes=access.duration_minutes
+                )
+                data.append(access_dto.model_dump(by_alias=True, mode='json'))
             
             return {
                 "success": True,
@@ -187,7 +208,7 @@ class AccessUseCase(AccessUseCasePort):
                 employee_id, start_date, end_date
             )
             
-            # Format response
+            # Format response with DTOs
             data = []
             total_minutes = 0
             
@@ -195,13 +216,15 @@ class AccessUseCase(AccessUseCasePort):
                 duration = access.duration_minutes if access.duration_minutes else 0
                 total_minutes += duration
                 
-                data.append({
-                    "date": access.access_datetime.strftime("%Y-%m-%d"),
-                    "access_time": access.access_datetime.strftime("%H:%M:%S"),
-                    "exit_time": access.exit_datetime.strftime("%H:%M:%S") if access.exit_datetime else "Still inside",
-                    "duration_minutes": access.duration_minutes if access.duration_minutes else "N/A",
-                    "duration_hours": f"{duration // 60}h {duration % 60}m" if access.duration_minutes else "N/A"
-                })
+                access_dto = AccessRecordResponseDTO(
+                    id=str(access.id),
+                    employee_id=access.employee_id,
+                    access_datetime=access.access_datetime,
+                    exit_datetime=access.exit_datetime,
+                    duration_minutes=access.duration_minutes
+                )
+                
+                data.append(access_dto.model_dump(by_alias=True, mode='json'))
             
             return {
                 "success": True,
@@ -221,6 +244,43 @@ class AccessUseCase(AccessUseCasePort):
             }
         except Exception as e:
             logger.error(f"Error in employee_by_dates: {e}")
+            return {
+                "success": False,
+                "message": f"Error: {str(e)}"
+            }
+    
+    def get_all_active_accesses(self) -> Dict:
+        """
+        Get all active access records (employees currently inside)
+        
+        Returns:
+            Dict with list of active access records
+        """
+        try:
+            # Get all active accesses from repository
+            accesses = self.repository.find_all_active()
+            
+            # Format response with DTOs
+            data = []
+            for access in accesses:
+                access_dto = AccessRecordResponseDTO(
+                    id=str(access.id),
+                    employee_id=access.employee_id,
+                    access_datetime=access.access_datetime,
+                    exit_datetime=access.exit_datetime,
+                    duration_minutes=access.duration_minutes
+                )
+                data.append(access_dto.model_dump(by_alias=True, mode='json'))
+            
+            return {
+                "success": True,
+                "message": f"Found {len(data)} active accesses",
+                "count": len(data),
+                "data": data
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in get_all_active_accesses: {e}")
             return {
                 "success": False,
                 "message": f"Error: {str(e)}"

@@ -76,7 +76,7 @@ export class Dashboard implements OnInit {
         this.stats.update(s => ({ ...s, todayAccess: accesses.length }));
         
         // Calcular empleados dentro (entrada sin salida)
-        const inside = accesses.filter((a: any) => !a.exit_datetime).length;
+        const inside = accesses.filter((a: any) => !a.exitDatetime).length;
         this.stats.update(s => ({ ...s, employeesInside: inside }));
         
         this.loading.set(false);

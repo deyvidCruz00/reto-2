@@ -69,12 +69,12 @@
         
         @if (employeesInsideList().length > 0) {
           <div class="employees-inside-list">
-            @for (access of employeesInsideList(); track access.employeeDocumentNumber) {
+            @for (access of employeesInsideList(); track access.employeeId) {
               <div class="inside-item">
                 <mat-icon class="entry-icon">login</mat-icon>
                 <div class="inside-info">
-                  <p class="doc-number">{{ access.employeeDocumentNumber }}</p>
-                  <p class="entry-time">Entrada: {{ formatTime(access.entry_datetime) }}</p>
+                  <p class="doc-number">{{ access.employeeId }}</p>
+                  <p class="entry-time">Entrada: {{ formatTime(access.accessDatetime) }}</p>
                 </div>
               </div>
             }
@@ -119,7 +119,7 @@
           <table mat-table [dataSource]="accessHistory()" class="access-table">
             <ng-container matColumnDef="documentNumber">
               <th mat-header-cell *matHeaderCellDef>Documento</th>
-              <td mat-cell *matCellDef="let access">{{ access.employeeDocumentNumber }}</td>
+              <td mat-cell *matCellDef="let access">{{ access.employeeId }}</td>
             </ng-container>
 
             <ng-container matColumnDef="entry">
@@ -127,7 +127,7 @@
               <td mat-cell *matCellDef="let access">
                 <div class="datetime-cell">
                   <mat-icon class="entry-icon">login</mat-icon>
-                  {{ formatDateTime(access.entry_datetime) }}
+                  {{ formatDateTime(access.accessDatetime) }}
                 </div>
               </td>
             </ng-container>
@@ -135,10 +135,10 @@
             <ng-container matColumnDef="exit">
               <th mat-header-cell *matHeaderCellDef>Salida</th>
               <td mat-cell *matCellDef="let access">
-                @if (access.exit_datetime) {
+                @if (access.exitDatetime) {
                   <div class="datetime-cell">
                     <mat-icon class="exit-icon">logout</mat-icon>
-                    {{ formatDateTime(access.exit_datetime) }}
+                    {{ formatDateTime(access.exitDatetime) }}
                   </div>
                 } @else {
                   <mat-chip class="inside-chip">Dentro</mat-chip>
@@ -149,7 +149,7 @@
             <ng-container matColumnDef="duration">
               <th mat-header-cell *matHeaderCellDef>Duración</th>
               <td mat-cell *matCellDef="let access">
-                {{ calculateDuration(access.entry_datetime, access.exit_datetime) }}
+                {{ calculateDuration(access.accessDatetime, access.exitDatetime) }}
               </td>
             </ng-container>
 

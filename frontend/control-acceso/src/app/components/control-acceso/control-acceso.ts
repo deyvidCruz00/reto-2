@@ -136,7 +136,8 @@ export class ControlAcceso implements OnInit {
     this.accessService.getAllAccess().subscribe({
       next: (response) => {
         const accesses = Array.isArray(response.data) ? response.data : [];
-        const inside = accesses.filter((a: any) => !a.exit_datetime);
+        // Filter active accesses (without exitDatetime)
+        const inside = accesses.filter((a: any) => !a.exitDatetime);
         this.employeesInsideList.set(inside);
         this.employeesInside.set(inside.length);
       },

@@ -66,16 +66,16 @@
           <p class="no-data">No hay registros de acceso recientes</p>
         } @else {
           <div class="activity-list">
-            @for (access of recentAccess(); track access.employeeDocumentNumber + access.entry_datetime) {
+            @for (access of recentAccess(); track access.employeeId + access.accessDatetime) {
               <div class="activity-item">
-                <mat-icon [class]="access.exit_datetime ? 'exit-icon' : 'entry-icon'">
-                  {{ access.exit_datetime ? 'logout' : 'login' }}
+                <mat-icon [class]="access.exitDatetime ? 'exit-icon' : 'entry-icon'">
+                  {{ access.exitDatetime ? 'logout' : 'login' }}
                 </mat-icon>
                 <div class="activity-info">
-                  <p class="activity-employee">{{ access.employeeDocumentNumber }}</p>
+                  <p class="activity-employee">{{ access.employeeId }}</p>
                   <p class="activity-time">
-                    {{ access.exit_datetime ? 'Salida' : 'Entrada' }}: 
-                    {{ formatDateTime(access.exit_datetime || access.entry_datetime) }}
+                    {{ access.exitDatetime ? 'Salida' : 'Entrada' }}: 
+                    {{ formatDateTime(access.exitDatetime || access.accessDatetime) }}
                   </p>
                 </div>
               </div>

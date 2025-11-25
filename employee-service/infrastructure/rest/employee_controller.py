@@ -67,6 +67,11 @@ def create_employee_blueprint(employee_use_case: EmployeeUseCasePort) -> Bluepri
         """Disable/delete an employee (legacy route)"""
         return _delete_employee(document)
     
+    @employee_bp.route('/enableemployee/<document>', methods=['PUT'])
+    def enableemployee(document: str):
+        """Enable/activate an employee (legacy route)"""
+        return _activate_employee(document)
+    
     @employee_bp.route('/<document>/validate', methods=['GET'])
     def validate_employee(document: str):
         """Validate employee (for testing)"""
@@ -90,17 +95,43 @@ def create_employee_blueprint(employee_use_case: EmployeeUseCasePort) -> Bluepri
         """Internal: Create a new employee"""
         try:
             data = request.get_json()
+            logger.info(f"Received create employee request with data: {data}")
+            
+            # Normalize field names (support both camelCase and lowercase)
+            normalized_data = {}
+            
+            # Map camelCase to lowercase
+            field_mapping = {
+                'firstName': 'firstname',
+                'firstname': 'firstname',
+                'lastName': 'lastname',
+                'lastname': 'lastname',
+                'document': 'document',
+                'documentNumber': 'document',
+                'email': 'email',
+                'phone': 'phone',
+                'phoneNumber': 'phone',
+                'status': 'status'
+            }
+            
+            for key, value in data.items():
+                normalized_key = field_mapping.get(key, key.lower())
+                normalized_data[normalized_key] = value
+            
+            logger.info(f"Normalized data: {normalized_data}")
             
             # Validate required fields
             required_fields = ['document', 'firstname', 'lastname', 'email', 'phone']
-            for field in required_fields:
-                if field not in data:
-                    return jsonify({
-                        "success": False,
-                        "message": f"Missing required field: {field}"
-                    }), 400
+            missing_fields = [field for field in required_fields if field not in normalized_data]
             
-            result = employee_use_case.create_employee(data)
+            if missing_fields:
+                logger.error(f"Missing required fields: {missing_fields}. Received data: {data}")
+                return jsonify({
+                    "success": False,
+                    "message": f"Missing required fields: {', '.join(missing_fields)}"
+                }), 400
+            
+            result = employee_use_case.create_employee(normalized_data)
             
             if result['success']:
                 return jsonify(result), 201
@@ -146,14 +177,38 @@ def create_employee_blueprint(employee_use_case: EmployeeUseCasePort) -> Bluepri
         """Internal: Update an existing employee"""
         try:
             data = request.get_json()
+            logger.info(f"Received update employee request with data: {data}")
             
-            if 'document' not in data:
+            # Normalize field names (support both camelCase and lowercase)
+            normalized_data = {}
+            
+            # Map camelCase to lowercase
+            field_mapping = {
+                'firstName': 'firstname',
+                'firstname': 'firstname',
+                'lastName': 'lastname',
+                'lastname': 'lastname',
+                'document': 'document',
+                'documentNumber': 'document',
+                'email': 'email',
+                'phone': 'phone',
+                'phoneNumber': 'phone',
+                'status': 'status'
+            }
+            
+            for key, value in data.items():
+                normalized_key = field_mapping.get(key, key.lower())
+                normalized_data[normalized_key] = value
+            
+            logger.info(f"Normalized data: {normalized_data}")
+            
+            if 'document' not in normalized_data:
                 return jsonify({
                     "success": False,
                     "message": "Document is required"
                 }), 400
             
-            result = employee_use_case.update_employee(data)
+            result = employee_use_case.update_employee(normalized_data)
             
             if result['success']:
                 return jsonify(result), 200
@@ -178,6 +233,22 @@ def create_employee_blueprint(employee_use_case: EmployeeUseCasePort) -> Bluepri
                 return jsonify(result), 404
         except Exception as e:
             logger.error(f"Error in delete_employee endpoint: {e}")
+            return jsonify({
+                "success": False,
+                "message": f"Error: {str(e)}"
+            }), 500
+    
+    def _activate_employee(document: str):
+        """Internal: Activate an employee"""
+        try:
+            result = employee_use_case.activate_employee(document)
+            
+            if result['success']:
+                return jsonify(result), 200
+            else:
+                return jsonify(result), 404
+        except Exception as e:
+            logger.error(f"Error in activate_employee endpoint: {e}")
             return jsonify({
                 "success": False,
                 "message": f"Error: {str(e)}"

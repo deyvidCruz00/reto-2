@@ -41,6 +41,10 @@ class MongoDBEmployeeRepository(EmployeeRepositoryPort):
             employee_dict = self.collection.find_one({"document": document})
             if employee_dict:
                 employee_dict.pop('_id', None)  # Remove MongoDB _id
+                # Ensure phone field has at least 7 characters, pad if necessary
+                if 'phone' in employee_dict and len(str(employee_dict['phone'])) < 7:
+                    employee_dict['phone'] = str(employee_dict['phone']).ljust(7, '0')
+                    logger.warning(f"Padded phone for employee {document}: {employee_dict['phone']}")
                 return Employee(**employee_dict)
             return None
         except Exception as e:
@@ -52,8 +56,16 @@ class MongoDBEmployeeRepository(EmployeeRepositoryPort):
         try:
             employees = []
             for emp_dict in self.collection.find():
-                emp_dict.pop('_id', None)
-                employees.append(Employee(**emp_dict))
+                try:
+                    emp_dict.pop('_id', None)
+                    # Ensure phone field has at least 7 characters, pad if necessary
+                    if 'phone' in emp_dict and len(str(emp_dict['phone'])) < 7:
+                        emp_dict['phone'] = str(emp_dict['phone']).ljust(7, '0')
+                        logger.warning(f"Padded phone for employee {emp_dict.get('document', 'unknown')}: {emp_dict['phone']}")
+                    employees.append(Employee(**emp_dict))
+                except Exception as e:
+                    logger.warning(f"Skipping invalid employee record: {e}. Data: {emp_dict}")
+                    continue
             logger.info(f"Found {len(employees)} employees")
             return employees
         except Exception as e:

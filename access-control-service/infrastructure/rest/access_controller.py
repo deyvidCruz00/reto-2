@@ -51,10 +51,33 @@ def create_access_blueprint(access_use_case: AccessUseCasePort) -> Blueprint:
         """
         try:
             data = request.get_json()
+            logger.info(f"Received check-in request with data: {data}")
+            
+            # Normalize field names - support multiple field name variations
+            normalized_data = {}
+            employee_id = (
+                data.get('employeeDocumentNumber') or
+                data.get('document') or 
+                data.get('employeeId') or 
+                data.get('employee_id') or
+                data.get('documentNumber') or
+                data.get('cedula') or
+                data.get('dni')
+            )
+            
+            if not employee_id:
+                logger.error(f"Missing employee identifier in check-in request. Received: {data}")
+                return jsonify({
+                    "success": False,
+                    "message": "Missing required field: employeeId, document, or documentNumber"
+                }), 400
+            
+            normalized_data['employeeId'] = str(employee_id)
+            logger.info(f"Normalized check-in data: {normalized_data}")
             
             # Validate request with DTO
             try:
-                checkin_dto = CheckInRequestDTO(**data)
+                checkin_dto = CheckInRequestDTO(**normalized_data)
             except ValidationError as e:
                 return jsonify({
                     "success": False,
@@ -104,10 +127,33 @@ def create_access_blueprint(access_use_case: AccessUseCasePort) -> Blueprint:
         """
         try:
             data = request.get_json()
+            logger.info(f"Received check-out request with data: {data}")
+            
+            # Normalize field names - support multiple field name variations
+            normalized_data = {}
+            employee_id = (
+                data.get('employeeDocumentNumber') or
+                data.get('document') or 
+                data.get('employeeId') or 
+                data.get('employee_id') or
+                data.get('documentNumber') or
+                data.get('cedula') or
+                data.get('dni')
+            )
+            
+            if not employee_id:
+                logger.error(f"Missing employee identifier in check-out request. Received: {data}")
+                return jsonify({
+                    "success": False,
+                    "message": "Missing required field: employeeId, document, or documentNumber"
+                }), 400
+            
+            normalized_data['employeeId'] = str(employee_id)
+            logger.info(f"Normalized check-out data: {normalized_data}")
             
             # Validate request with DTO
             try:
-                checkout_dto = CheckOutRequestDTO(**data)
+                checkout_dto = CheckOutRequestDTO(**normalized_data)
             except ValidationError as e:
                 return jsonify({
                     "success": False,
@@ -200,9 +246,18 @@ def create_access_blueprint(access_use_case: AccessUseCasePort) -> Blueprint:
             description: Employee access report for date range
         """
         try:
-            employee_id = request.args.get('employeeId')
+            # Support multiple query parameter names for employee identifier
+            employee_id = (
+                request.args.get('employeeId') or 
+                request.args.get('document') or
+                request.args.get('employeeDocument') or
+                request.args.get('documentNumber') or
+                request.args.get('employee_id')
+            )
             start_date = request.args.get('startDate')
             end_date = request.args.get('endDate')
+            
+            logger.info(f"Received employee_by_dates request: employeeId={employee_id}, startDate={start_date}, endDate={end_date}")
             
             # Validate query parameters with DTO
             try:
@@ -240,5 +295,18 @@ def create_access_blueprint(access_use_case: AccessUseCasePort) -> Blueprint:
             "status": "UP",
             "service": "access-control-service"
         }), 200
+    
+    @access_bp.route('/all', methods=['GET'])
+    def get_all_active_accesses():
+        """Get all active accesses (employees currently inside)"""
+        try:
+            result = access_use_case.get_all_active_accesses()
+            return jsonify(result), 200
+        except Exception as e:
+            logger.error(f"Error in get_all_active_accesses endpoint: {e}")
+            return jsonify({
+                "success": False,
+                "message": f"Error: {str(e)}"
+            }), 500
 
     return access_bp
