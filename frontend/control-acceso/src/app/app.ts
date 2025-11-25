@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -30,9 +30,9 @@ export class App {
   protected readonly title = signal('Sistema de Control de Acceso');
   sidenavOpened = signal(true);
   
-  // Authentication state
-  protected readonly isAuthenticated = computed(() => this.authService.isAuthenticated());
-  protected readonly userId = computed(() => this.authService.getUserId());
+  // Authentication state - usando el observable del servicio
+  protected readonly isAuthenticated = signal(false);
+  protected readonly userId = signal<number | null>(null);
   
   menuItems = [
     { path: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
@@ -43,7 +43,17 @@ export class App {
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) {
+    // Suscribirse al estado de autenticación
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      this.isAuthenticated.set(isAuth);
+      if (isAuth) {
+        this.userId.set(this.authService.getUserId());
+      } else {
+        this.userId.set(null);
+      }
+    });
+  }
   
   toggleSidenav(): void {
     this.sidenavOpened.set(!this.sidenavOpened());
